@@ -1,0 +1,55 @@
+{
+  "tech_stack": ["JavaScript", "React", "Vite", "Supabase", "TailwindCSS", "Lucide Icons"],
+  "features": [
+    {
+      "name": "LoginPage",
+      "description": "User authentication page with email/password login via Supabase Auth",
+      "files": ["src/components/LoginPage.jsx"]
+    },
+    {
+      "name": "RegisterPage",
+      "description": "New user registration page for team members",
+      "files": ["src/components/RegisterPage.jsx"]
+    },
+    {
+      "name": "AdminDashboard",
+      "description": "Main dashboard with metrics, process management, team management, reports, and settings",
+      "files": ["src/components/AdminDashboard.jsx"]
+    },
+    {
+      "name": "UploadForm",
+      "description": "Form to upload new legal processes with PDF and video attachments",
+      "files": ["src/components/UploadForm.jsx", "src/components/UploadPage.jsx"]
+    },
+    {
+      "name": "LandingPage",
+      "description": "Client-facing page to view their legal process video and PDF with password protection",
+      "files": ["src/components/LandingPage.jsx"]
+    },
+    {
+      "name": "SuccessPage",
+      "description": "Confirmation page after successful process upload with confetti animation",
+      "files": ["src/components/SuccessPage.jsx"]
+    },
+    {
+      "name": "Sidebar",
+      "description": "Navigation sidebar with role-based menu items (admin vs member)",
+      "files": ["src/components/Sidebar.jsx"]
+    },
+    {
+      "name": "ConfiguracoesPage",
+      "description": "Settings page for user preferences and whitelabel configuration",
+      "files": ["src/components/ConfiguracoesPage.jsx"]
+    },
+    {
+      "name": "ThemeContext",
+      "description": "Dark/Light mode toggle functionality with localStorage persistence",
+      "files": ["src/context/ThemeContext.jsx"]
+    },
+    {
+      "name": "PdfVisualEditor",
+      "description": "Visual editor to position QR code on PDF documents",
+      "files": ["src/components/PdfVisualEditor.jsx"]
+    }
+  ]
+}

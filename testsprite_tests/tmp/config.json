@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5175",
+  "loginUser": "admin@admin.com",
+  "loginPassword": "admin951753",
+  "executionArgs": {
+    "projectName": "app explicare",
+    "projectPath": "c:/Users/Ronaldin/Downloads/app explicare/app explicare",
+    "testIds": [],
+    "additionalInstruction": "Use password admin951753 for login (not admin123456). The app runs on port 5175.",
+    "envs": {
+      "API_KEY": "sk-user-9P9_naUwEVddyeF81U-oHjRD1E4qja_6VM0rEt4bK02VQWGqGPmO2gTdtkdRQl0eOwA26pcpaOlnDKdF4uJxEh8kOlpAaidDlVKmq1pWJudBvgaY-VANApyQtbip_L8Y0_w"
+    }
+  },
+  "serverPort": 53854,
+  "proxy": "http://dd04a614-6305-43f7-987d-5db5b55d2f18:gwkMiUcuxAm03vfJwq7mcSVFUYTi85W4@tun.testsprite.com:8080"
+}

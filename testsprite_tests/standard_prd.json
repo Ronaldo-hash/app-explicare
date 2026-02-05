@@ -1,0 +1,119 @@
+{
+  "meta": {
+    "project": "Explicare - Sistema de Gestão Jurídica",
+    "date": "2026-02-04",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Explicare is a web-based legal management system designed for law firms to securely manage legal processes and share PDF and video documents with clients.",
+  "core_goals": [
+    "Provide secure authentication and team member management.",
+    "Enable comprehensive administrative oversight of legal processes and team metrics.",
+    "Facilitate easy uploading and sharing of legal documents with clients, including QR code positioning on PDFs.",
+    "Offer clients a secure, password-protected portal for accessing process information and related media.",
+    "Allow customization of the system settings including whitelabel branding and UI themes."
+  ],
+  "key_features": [
+    "User authentication with email/password login and team member registration using Supabase Auth.",
+    "Admin dashboard with metrics visualization, process list with search and pagination, team management, and analytical reports.",
+    "Upload form for new legal processes supporting PDF and video uploads, QR code visual positioning on PDFs, and unique client link generation.",
+    "Client landing page with password protection, video playback, PDF download, and WhatsApp contact button.",
+    "Settings page featuring whitelabel customization and dark/light mode toggle with persistence via localStorage."
+  ],
+  "user_flow_summary": [
+    "User logs in or registers as a new team member via the LoginPage or RegisterPage.",
+    "Admin navigates the AdminDashboard to monitor processes, metrics, and manage the team.",
+    "Admin uploads new legal processes via UploadForm, including PDFs, videos, and positioning QR codes using PdfVisualEditor.",
+    "Clients access their process details on a password-protected LandingPage where they can view videos and download PDFs.",
+    "Users personalize settings such as theme mode and branding on the ConfiguracoesPage."
+  ],
+  "validation_criteria": [
+    "Authentication must succeed only with valid credentials.",
+    "Dashboard displays all registered processes accurately with search and pagination.",
+    "Uploading a new process generates a functioning unique link to the client landing page.",
+    "Landing page shows video and PDF content only after correct password entry.",
+    "Settings changes persist across sessions and reflect immediately in the UI."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "JavaScript",
+      "React",
+      "Vite",
+      "Supabase",
+      "TailwindCSS",
+      "Lucide Icons"
+    ],
+    "features": [
+      {
+        "name": "LoginPage",
+        "description": "User authentication page with email/password login via Supabase Auth",
+        "files": [
+          "src/components/LoginPage.jsx"
+        ]
+      },
+      {
+        "name": "RegisterPage",
+        "description": "New user registration page for team members",
+        "files": [
+          "src/components/RegisterPage.jsx"
+        ]
+      },
+      {
+        "name": "AdminDashboard",
+        "description": "Main dashboard with metrics, process management, team management, reports, and settings",
+        "files": [
+          "src/components/AdminDashboard.jsx"
+        ]
+      },
+      {
+        "name": "UploadForm",
+        "description": "Form to upload new legal processes with PDF and video attachments",
+        "files": [
+          "src/components/UploadForm.jsx",
+          "src/components/UploadPage.jsx"
+        ]
+      },
+      {
+        "name": "LandingPage",
+        "description": "Client-facing page to view their legal process video and PDF with password protection",
+        "files": [
+          "src/components/LandingPage.jsx"
+        ]
+      },
+      {
+        "name": "SuccessPage",
+        "description": "Confirmation page after successful process upload with confetti animation",
+        "files": [
+          "src/components/SuccessPage.jsx"
+        ]
+      },
+      {
+        "name": "Sidebar",
+        "description": "Navigation sidebar with role-based menu items (admin vs member)",
+        "files": [
+          "src/components/Sidebar.jsx"
+        ]
+      },
+      {
+        "name": "ConfiguracoesPage",
+        "description": "Settings page for user preferences and whitelabel configuration",
+        "files": [
+          "src/components/ConfiguracoesPage.jsx"
+        ]
+      },
+      {
+        "name": "ThemeContext",
+        "description": "Dark/Light mode toggle functionality with localStorage persistence",
+        "files": [
+          "src/context/ThemeContext.jsx"
+        ]
+      },
+      {
+        "name": "PdfVisualEditor",
+        "description": "Visual editor to position QR code on PDF documents",
+        "files": [
+          "src/components/PdfVisualEditor.jsx"
+        ]
+      }
+    ]
+  }
+}

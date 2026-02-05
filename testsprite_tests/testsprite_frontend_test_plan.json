@@ -1,0 +1,473 @@
+[
+  {
+    "id": "TC001",
+    "title": "Successful login with valid credentials",
+    "description": "Verify that a team member can log in successfully with valid email and password credentials.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to LoginPage"
+      },
+      {
+        "type": "action",
+        "description": "Enter a registered email and correct password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login is successful and user is redirected to AdminDashboard"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Login failure with invalid credentials",
+    "description": "Verify that login fails when entering an unregistered email or incorrect password.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to LoginPage"
+      },
+      {
+        "type": "action",
+        "description": "Enter an unregistered email or incorrect password"
+      },
+      {
+        "type": "action",
+        "description": "Click the login button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that login is denied and an error message is displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "New team member registration with valid data",
+    "description": "Verify that a new team member can register successfully with valid details.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to RegisterPage"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid registration details (email, password, name, etc.)"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify registration succeeds and user is redirected or prompted to login"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Registration failure with invalid or missing data",
+    "description": "Verify that registration fails when submitting invalid or incomplete details.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to RegisterPage"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form with missing or invalid fields (e.g., invalid email format, short password)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appropriate error messages are shown and registration is not accepted"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "AdminDashboard displays all registered legal processes",
+    "description": "Verify that the AdminDashboard lists all existing legal processes accurately.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to AdminDashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the process list accurately displays all registered legal processes"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "AdminDashboard process list search functionality",
+    "description": "Verify that the search input filters the legal process list correctly by provided keywords.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to AdminDashboard with multiple processes available"
+      },
+      {
+        "type": "action",
+        "description": "Enter process-related keywords into the search input"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the process list displays only processes matching the search terms"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "AdminDashboard pagination of legal processes",
+    "description": "Verify that the pagination controls correctly divide the process list into pages and navigation works.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to AdminDashboard with more processes than fit on one page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify processes are split across pages"
+      },
+      {
+        "type": "action",
+        "description": "Use pagination controls to navigate to next and previous pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify processes shown correspond to the correct page"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "UploadForm process upload with valid PDF and video",
+    "description": "Verify the UploadForm allows uploading a new legal process including a PDF and video attachment successfully.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to UploadForm"
+      },
+      {
+        "type": "action",
+        "description": "Fill out the form with valid process data"
+      },
+      {
+        "type": "action",
+        "description": "Attach a valid PDF document"
+      },
+      {
+        "type": "action",
+        "description": "Attach a valid video file"
+      },
+      {
+        "type": "action",
+        "description": "Submit the upload form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify upload succeeds, a unique client link is generated, and SuccessPage is displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "UploadForm process upload with PDF QR code positioning",
+    "description": "Verify the user can visually position a QR code on the uploaded PDF in the PdfVisualEditor before finalizing upload.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to UploadForm and upload a PDF"
+      },
+      {
+        "type": "action",
+        "description": "Open PdfVisualEditor with loaded PDF"
+      },
+      {
+        "type": "action",
+        "description": "Drag and position the QR code at a desired location on the PDF"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the QR code position"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that QR code position is saved and reflected on the final PDF"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "UploadForm validation for required fields",
+    "description": "Verify that the UploadForm prevents submission when required fields or attachments are missing.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to UploadForm"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to submit the form with missing required fields or no attachments"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify form validation errors are shown and submission is blocked"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Client LandingPage password protection success",
+    "description": "Verify that a client can access their legal process details by entering the correct password on the LandingPage.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the unique client link for a process"
+      },
+      {
+        "type": "action",
+        "description": "Enter the correct password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is granted and the process video playback and PDF download are visible"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Client LandingPage password protection failure",
+    "description": "Verify that access is denied when a client enters an incorrect password on the LandingPage.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the unique client link for a process"
+      },
+      {
+        "type": "action",
+        "description": "Enter an invalid password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the password form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and an error message is displayed"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Client LandingPage displays PDF download link and WhatsApp contact",
+    "description": "Verify that after successful password authentication, the client can download the PDF and see the WhatsApp contact button.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login successfully on LandingPage with correct password"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify PDF download button is visible and functional"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify WhatsApp contact button is visible and clickable"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Sidebar shows correct navigation items based on user role",
+    "description": "Verify that the Sidebar displays navigation items appropriate to the logged-in user's role (admin or team member).",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Sidebar shows admin-specific menu items including AdminDashboard and settings"
+      },
+      {
+        "type": "action",
+        "description": "Logout and login as regular team member"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Sidebar shows restricted menu items excluding admin-only features"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "ConfiguracoesPage whitelabel customization application",
+    "description": "Verify that changes to whitelabel branding settings update the system UI as expected.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to ConfiguracoesPage"
+      },
+      {
+        "type": "action",
+        "description": "Modify whitelabel branding options (e.g., logos, color scheme)"
+      },
+      {
+        "type": "action",
+        "description": "Save settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI updates reflect the new whitelabel branding immediately"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Dark/Light mode toggle persistence across sessions",
+    "description": "Verify that the theme mode toggle on ConfiguracoesPage persists user selection via localStorage and applies on page reload.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to ConfiguracoesPage"
+      },
+      {
+        "type": "action",
+        "description": "Toggle between dark and light modes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI theme updates immediately"
+      },
+      {
+        "type": "action",
+        "description": "Reload the page or open the application in a new tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected theme mode is retained and applied after reload"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "AdminDashboard analytics reports display correctness",
+    "description": "Verify that analytical reports on the AdminDashboard show accurate and updated data metrics related to legal processes and team activity.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as admin and navigate to AdminDashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify analytical reports metrics correspond correctly to the current system data"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Unique client link generation upon process upload",
+    "description": "Verify that each newly uploaded legal process generates a unique and accessible client link.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Upload a new legal process with valid data via UploadForm"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a unique client link is generated and included in the SuccessPage"
+      },
+      {
+        "type": "action",
+        "description": "Access the unique client link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the client LandingPage loads correctly for that process"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Access control prevents unauthorized access to admin features",
+    "description": "Verify that users without admin rights cannot access admin-specific pages such as AdminDashboard or UploadForm.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as a normal team member"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to navigate directly to AdminDashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied or redirected to unauthorized page"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to navigate to UploadForm"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied or redirected"
+      }
+    ]
+  }
+]
