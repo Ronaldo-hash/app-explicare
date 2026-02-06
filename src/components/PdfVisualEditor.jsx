@@ -231,6 +231,7 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
                                         left: position.x,
                                         top: position.y,
                                         cursor: isDragging ? 'grabbing' : 'grab',
+                                        touchAction: 'none', // Crucial for mobile drag
                                         transition: isDragging ? 'none' : 'left 0.1s ease-out, top 0.1s ease-out'
                                     }}
                                     className="z-10 w-20 h-20 border-2 border-blue-500 bg-white p-1 shadow-lg shadow-blue-500/30"
