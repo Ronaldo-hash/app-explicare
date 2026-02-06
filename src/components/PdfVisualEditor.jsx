@@ -141,7 +141,8 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
         const qrSize = 40; // Half of QR size
 
         let newX = touch.clientX - rect.left - qrSize;
-        let newY = touch.clientY - rect.top - qrSize;
+        // UX Enhancement: Offset Y by extra 50px so finger doesn't cover the code
+        let newY = touch.clientY - rect.top - qrSize - 50;
 
         // Clamp to PDF bounds
         newX = Math.max(0, Math.min(newX, pageWidth - 80));
@@ -231,10 +232,12 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
                                         left: position.x,
                                         top: position.y,
                                         cursor: isDragging ? 'grabbing' : 'grab',
-                                        touchAction: 'none', // Crucial for mobile drag
-                                        transition: isDragging ? 'none' : 'left 0.1s ease-out, top 0.1s ease-out'
+                                        touchAction: 'none',
+                                        transition: isDragging ? 'none' : 'left 0.1s ease-out, top 0.1s ease-out',
+                                        transform: isDragging ? 'scale(1.1) translateY(-10px)' : 'scale(1)', // Pop effect
+                                        boxShadow: isDragging ? '0 10px 25px -5px rgba(59, 130, 246, 0.5)' : ''
                                     }}
-                                    className="z-10 w-20 h-20 border-2 border-blue-500 bg-white p-1 shadow-lg shadow-blue-500/30"
+                                    className={`z-10 w-20 h-20 border-2 ${isDragging ? 'border-blue-400' : 'border-blue-500'} bg-white p-1 rounded-lg shadow-lg`}
                                 >
                                     <img src={qrCodeDataUrl} alt="QR" className="w-full h-full object-contain pointer-events-none" />
                                     <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full whitespace-nowrap pointer-events-none">
