@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Video, Loader2, FileCheck, AlertTriangle, Eye, EyeOff, FileText, ArrowRight } from 'lucide-react';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFName } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { cn } from '../lib/utils';
 import { PdfVisualEditor } from './PdfVisualEditor';
@@ -158,25 +158,31 @@ export function UploadForm({ onSuccess, supabase }) {
                 color: rgb(0, 0.4, 0.8)
             });
 
-            // Add clickable link annotation for PDF readers
+            // Add clickable link annotation for PDF readers (Fixed Implementation)
             try {
-                const linkAnnotation = firstPage.doc.context.obj({
-                    Type: 'Annot',
-                    Subtype: 'Link',
-                    Rect: [x, Math.min(linkY, urlY) - 2, x + 150, Math.max(linkY, urlY) + 10],
-                    Border: [0, 0, 0],
-                    A: {
-                        Type: 'Action',
-                        S: 'URI',
-                        URI: landingUrl
-                    }
-                });
-                const linkRef = firstPage.doc.context.register(linkAnnotation);
-                const existingAnnots = firstPage.node.get(firstPage.doc.context.obj('Annots'));
-                if (existingAnnots) {
-                    existingAnnots.push(linkRef);
+                const linkAnnotation = pdfDoc.context.register(
+                    pdfDoc.context.obj({
+                        Type: 'Annot',
+                        Subtype: 'Link',
+                        Rect: [x, Math.min(linkY, urlY) - 2, x + 200, Math.max(linkY, urlY) + 12], // Expanded click area
+                        Border: [0, 0, 0],
+                        C: [0, 0, 1],
+                        A: {
+                            Type: 'Action',
+                            S: 'URI',
+                            URI: landingUrl,
+                        },
+                    })
+                );
+
+                const pages = pdfDoc.getPages();
+                const firstPage = pages[0];
+                const annots = firstPage.node.lookup(PDFName.of('Annots'));
+
+                if (annots) {
+                    annots.push(linkAnnotation);
                 } else {
-                    firstPage.node.set(firstPage.doc.context.obj('Annots'), firstPage.doc.context.obj([linkRef]));
+                    firstPage.node.set(PDFName.of('Annots'), pdfDoc.context.obj([linkAnnotation]));
                 }
             } catch (e) {
                 console.log('Could not add link annotation:', e.message);
