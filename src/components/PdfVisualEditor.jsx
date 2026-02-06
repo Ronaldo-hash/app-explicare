@@ -122,6 +122,38 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
         setIsDragging(false);
     };
 
+    // Touch Handlers for Mobile
+    const handleTouchStart = (e) => {
+        if (!isLoaded) return;
+        // Prevent default to avoid scrolling while dragging
+        // e.preventDefault(); 
+        setIsDragging(true);
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging || !containerRef.current) return;
+
+        // Prevent scrolling while dragging
+        if (e.cancelable) e.preventDefault();
+
+        const touch = e.touches[0];
+        const rect = containerRef.current.getBoundingClientRect();
+        const qrSize = 40; // Half of QR size
+
+        let newX = touch.clientX - rect.left - qrSize;
+        let newY = touch.clientY - rect.top - qrSize;
+
+        // Clamp to PDF bounds
+        newX = Math.max(0, Math.min(newX, pageWidth - 80));
+        newY = Math.max(0, Math.min(newY, pageHeight - 80));
+
+        setPosition({ x: newX, y: newY });
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+    };
+
     const handleClick = (e) => {
         if (!isLoaded || isDragging) return;
         const rect = e.currentTarget.getBoundingClientRect();
@@ -139,6 +171,8 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
             <div className="bg-[#121214] rounded-2xl w-full max-w-5xl h-[90vh] flex flex-col border border-white/10 shadow-2xl relative">
                 <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#1a1a1e] rounded-t-2xl">
@@ -191,6 +225,7 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
                                 <div
                                     ref={nodeRef}
                                     onMouseDown={handleMouseDown}
+                                    onTouchStart={handleTouchStart}
                                     style={{
                                         position: 'absolute',
                                         left: position.x,
@@ -213,7 +248,7 @@ function PdfVisualEditorContent({ pdfFile, qrCodeDataUrl, onSave, onCancel }) {
                 <div className="p-3 border-t border-white/5 bg-[#1a1a1e] rounded-b-2xl">
                     <p className="text-zinc-500 text-xs text-center flex items-center justify-center gap-2">
                         <Info size={12} />
-                        Arraste o QR Code ou clique em qualquer lugar do PDF para posicioná-lo
+                        Arraste o QR Code ou toque para posicionar
                     </p>
                 </div>
             </div>
