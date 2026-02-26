@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Video, Loader2, FileCheck, AlertTriangle, Lock, LogOut, CheckCircle, ArrowRight } from 'lucide-react';
+import { Upload, FileText, Video, Loader2, FileCheck, AlertTriangle, Lock, LogOut, CheckCircle, ArrowRight, X } from 'lucide-react';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { cn } from '../lib/utils';
@@ -46,8 +46,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
             if (error) throw error;
             return data;
         } catch (err) {
-            // Tratamento de erro cru habilitado
-
             if (err.message === 'Failed to fetch' || err.name === 'StorageUnknownError') {
                 const rawUrl = `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`;
                 const res = await fetch(rawUrl, {
@@ -77,7 +75,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
             setStatusMsg("Verificando arquivo...");
 
-            // VERIFICAÇÃO DO PLANO FREE (50MB)
             const LIMIT_MB = 50;
             const LIMIT_BYTES = LIMIT_MB * 1024 * 1024;
 
@@ -90,8 +87,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
             setStatusMsg("Enviando vídeo...");
 
-            // EMERGENCY FIX: Ignore original filename completely to avoid "Invalid key"
-            // Generate a purely alphanumeric name: video_TIMESTAMP_RANDOM.ext
             const fileExt = videoFile.name.split('.').pop() || 'mp4';
             const safeRandomName = `video_${Date.now()}_${Math.floor(Math.random() * 10000)}.${fileExt}`;
             const videoPath = `videos/${slug}_${safeRandomName}`;
@@ -102,7 +97,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
             setStatusMsg("Gerando QR Code...");
             const qrCodeDataUrl = await QRCode.toDataURL(landingUrl, { errorCorrectionLevel: 'H', margin: 1, color: { dark: '#000000', light: '#FFFFFF' } });
 
-            // Salvar dados temporários e abrir editor visual
             setTempSlug(slug);
             setTempVideoUrl(videoUrlData.publicUrl);
             setGeneratedQrData(qrCodeDataUrl);
@@ -121,7 +115,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
         setLoading(true);
         setStatusMsg("Iniciando processamento...");
 
-        // Pequeno delay para garantir que a interface atualize e mostre o loader
         await new Promise(resolve => setTimeout(resolve, 100));
 
         setStatusMsg("Gerando PDF com QR Code...");
@@ -129,8 +122,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
         try {
             const landingUrl = `${window.location.origin}?v=${tempSlug}`;
             const pdfBytes = await pdfFile.arrayBuffer();
-            // Tenta carregar com a senha fornecida ou vazia
-            // OBS: pdf-lib exige password se o arquivo for criptografado, mesmo que seja senha vazia
             let pdfDoc;
             try {
                 pdfDoc = await PDFDocument.load(pdfBytes, { password: password || '' });
@@ -150,7 +141,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
             firstPage.drawImage(qrImage, { x, y, width: qrSize, height: qrSize });
 
-            // Desenhar Texto do Link
             firstPage.drawText('Acesse o vídeo:', {
                 x: x,
                 y: y - 12,
@@ -159,7 +149,6 @@ export function UploadPage({ supabase, session, onSuccess }) {
                 color: rgb(0, 0, 0),
             });
 
-            // Criar versão encurtada para exibição (sem https://)
             const displayUrl = landingUrl.replace(/^https?:\/\//, '').replace(/^www\./, '');
 
             const linkText = displayUrl;
@@ -172,10 +161,9 @@ export function UploadPage({ supabase, session, onSuccess }) {
                 y: y - 22,
                 size: linkFontSize,
                 font: helveticaFont,
-                color: rgb(0, 0, 1), // Azul para parecer link
+                color: rgb(0, 0, 1),
             });
 
-            // Desenhar Sublinhado (Underline)
             firstPage.drawLine({
                 start: { x: x, y: y - 23 },
                 end: { x: x + textWidth, y: y - 23 },
@@ -183,12 +171,11 @@ export function UploadPage({ supabase, session, onSuccess }) {
                 color: rgb(0, 0, 1),
             });
 
-            // Adicionar Anotação de Link Clicável
             const linkAnnotation = pdfDoc.context.register(
                 pdfDoc.context.obj({
                     Type: 'Annot',
                     Subtype: 'Link',
-                    Rect: [x, y - 25, x + textWidth, y - 22 + textHeight + 2], // Área clicável um pouco maior
+                    Rect: [x, y - 25, x + textWidth, y - 22 + textHeight + 2],
                     Border: [0, 0, 0],
                     C: [0, 0, 1],
                     A: {
@@ -224,7 +211,7 @@ export function UploadPage({ supabase, session, onSuccess }) {
                 titulo_peca: titulo || "Peça Processual",
                 video_url: tempVideoUrl,
                 pdf_final_url: pdfUrlData.publicUrl,
-                access_password: password || null // Salva senha ou null
+                access_password: password || null
             };
             const { error: dbErr } = await supabase.from('videos_pecas').insert([record]);
             if (dbErr) throw dbErr;
@@ -251,44 +238,50 @@ export function UploadPage({ supabase, session, onSuccess }) {
             )}
 
             {/* Header */}
-            <header className="border-b border-gray-700/50 bg-[#121212]/50 backdrop-blur-sm py-4 px-8 flex justify-center items-center relative rounded-b-xl mx-4 mt-2">
+            <header className="border-b border-[#c9a857]/10 bg-[#0a0a0b]/60 backdrop-blur-md py-4 px-8 flex justify-center items-center relative rounded-b-xl mx-4 mt-2">
                 {session?.user?.email && (
-                    <div className="absolute left-8 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-mono hidden md:block">
-                        <span className="text-activeBlue">user:</span> {session.user.email}
+                    <div className="absolute left-8 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono hidden md:block">
+                        <span className="text-[#c9a857]">user:</span> {session.user.email}
                     </div>
                 )}
                 <Logo />
             </header>
 
             {/* Main Content - 3 Column Grid Layout */}
-            <main className="flex-1 p-8">
+            <main className="flex-1 p-4 lg:p-8">
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
                     {/* LEFTSIDE: Branding & Benefits (Span 3) */}
-                    <div className="lg:col-span-3 space-y-8 animate-slide-up bg-[#18181b]/60 backdrop-blur-md p-6 rounded-2xl border border-gray-700/30 shadow-lg" style={{ animationDelay: '0.2s' }}>
+                    <div className="lg:col-span-3 space-y-8 animate-fade-in-up card-law" style={{ animationDelay: '0.2s' }}>
                         <div>
-                            <h1 className="text-3xl font-bold text-blue-500 mb-4 leading-tight drop-shadow-sm">
+                            <h1 className="text-3xl font-bold text-[#c9a857] mb-4 leading-tight drop-shadow-sm">
                                 Excelência e <br /> Inovação
                             </h1>
-                            <p className="text-gray-400 text-sm leading-relaxed border-l-2 border-blue-500/30 pl-4">
+                            <p className="text-zinc-400 text-sm leading-relaxed border-l-2 border-[#c9a857]/30 pl-4">
                                 Transformando a prática jurídica com tecnologia de ponta. Agilidade e segurança para seus processos.
                             </p>
                         </div>
 
                         <div className="space-y-4 pt-4">
-                            <h4 className="text-blue-500 text-xs font-bold uppercase tracking-wider mb-2">Recursos Premium</h4>
+                            <h4 className="text-[#c9a857] text-xs font-bold uppercase tracking-wider mb-2">Recursos Premium</h4>
 
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
-                                <div className="p-2 rounded-full bg-blue-900/20 text-blue-400"><Video size={16} /></div>
+                            <div className="flex items-center gap-3 text-sm text-zinc-300 group">
+                                <div className="p-2.5 rounded-xl bg-[#1e3a5f]/30 text-[#c9a857] group-hover:bg-[#1e3a5f]/50 transition-colors duration-300">
+                                    <Video size={16} />
+                                </div>
                                 <span>Explicação em Vídeo</span>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
-                                <div className="p-2 rounded-full bg-blue-900/20 text-blue-400"><FileCheck size={16} /></div>
+                            <div className="flex items-center gap-3 text-sm text-zinc-300 group">
+                                <div className="p-2.5 rounded-xl bg-[#1e3a5f]/30 text-[#c9a857] group-hover:bg-[#1e3a5f]/50 transition-colors duration-300">
+                                    <FileCheck size={16} />
+                                </div>
                                 <span>PDF Integrado</span>
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-gray-300">
-                                <div className="p-2 rounded-full bg-blue-900/20 text-blue-400"><Upload size={16} /></div>
+                            <div className="flex items-center gap-3 text-sm text-zinc-300 group">
+                                <div className="p-2.5 rounded-xl bg-[#1e3a5f]/30 text-[#c9a857] group-hover:bg-[#1e3a5f]/50 transition-colors duration-300">
+                                    <Upload size={16} />
+                                </div>
                                 <span>Upload Rápido</span>
                             </div>
                         </div>
@@ -296,90 +289,94 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
                     {/* CENTER: Upload Form (Span 6) */}
                     <div className="lg:col-span-6">
-                        <div className="w-full border border-gray-700/50 rounded-2xl p-8 bg-[#0c0c0e]/80 backdrop-blur-xl shadow-2xl relative animate-scale-in overflow-hidden ring-1 ring-white/5">
-                            {/* Decorative Top Line */}
-                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-80"></div>
+                        <div className="card-premium relative overflow-hidden">
+                            {/* Decorative Gold Top Line */}
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#c9a857] to-transparent opacity-80"></div>
+
+                            {/* Subtle Corner Glow */}
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-[#c9a857]/5 blur-[60px] rounded-full pointer-events-none"></div>
 
                             {/* Top Navigation */}
-                            <div className="flex justify-between mb-4 items-center">
-                                {/* Admin Link */}
+                            <div className="flex justify-between mb-6 items-center">
                                 <button
                                     onClick={() => window.location.href = '/admin'}
-                                    className="text-white/50 hover:text-blue-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors"
+                                    className="text-zinc-400 hover:text-[#c9a857] text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors duration-300"
                                 >
                                     Ir para Meus Processos &rarr;
                                 </button>
 
-                                {/* Logout Link */}
                                 <button
                                     onClick={() => {
                                         if (supabase?.auth) supabase.auth.signOut();
                                         window.location.href = '/login';
                                     }}
-                                    className="text-white/30 hover:text-red-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors ml-4"
+                                    className="text-zinc-600 hover:text-red-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-colors duration-300 ml-4"
                                     title="Sair do Sistema"
                                 >
                                     <LogOut size={12} /> Sair
                                 </button>
                             </div>
 
-                            <h2 className="text-2xl font-bold text-blue-500 text-center mb-6 relative z-10">
-                                <span className="inline-block border-b-2 border-blue-500/30 pb-2">
+                            <h2 className="text-2xl font-bold text-center mb-8 relative z-10">
+                                <span className="inline-block border-b-2 border-[#c9a857]/30 pb-2 text-gradient">
                                     Enviar Documento
                                 </span>
                             </h2>
 
                             {errorMsg && (
-                                <div className="mb-6 p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-red-200 text-sm flex items-center animate-pulse">
-                                    <AlertTriangle className="mr-2" size={16} /> {errorMsg}
+                                <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-xl text-red-300 text-sm flex items-center gap-3 animate-fade-in backdrop-blur-sm">
+                                    <AlertTriangle size={18} className="shrink-0 text-red-400" /> {errorMsg}
                                 </div>
                             )}
 
                             <div className="space-y-5">
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide text-[10px]">Número do Processo</label>
+                                    <label className="block text-[10px] font-bold text-[#c9a857] mb-2 uppercase tracking-wider">Número do Processo</label>
                                     <input
                                         type="text"
                                         value={processo}
                                         onChange={e => setProcesso(e.target.value)}
-                                        className="w-full px-4 py-3.5 bg-black/40 border border-gray-700 text-white rounded-xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder-gray-600"
+                                        className="input-premium"
                                         placeholder="0000000-00.0000.0.00.0000"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide text-[10px]">Título (Opcional)</label>
+                                    <label className="block text-[10px] font-bold text-[#c9a857] mb-2 uppercase tracking-wider">Título (Opcional)</label>
                                     <input
                                         type="text"
                                         value={titulo}
                                         onChange={e => setTitulo(e.target.value)}
-                                        className="w-full px-4 py-3.5 bg-black/40 border border-gray-700 text-white rounded-xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder-gray-600"
+                                        className="input-premium"
                                         placeholder="Ex: Petição Inicial"
                                     />
                                 </div>
 
-                                {/* Password Protection (NEW) */}
+                                {/* Password Protection */}
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-400 mb-2 flex items-center gap-2 uppercase tracking-wide text-[10px]">
-                                        <Lock size={12} className="text-blue-500" /> Proteger com Senha (Opcional)
+                                    <label className="block text-[10px] font-bold text-[#c9a857] mb-2 flex items-center gap-2 uppercase tracking-wider">
+                                        <Lock size={12} className="text-[#c9a857]" /> Proteger com Senha (Opcional)
                                     </label>
                                     <input
                                         type="text"
                                         value={password}
                                         onChange={e => setPassword(e.target.value)}
-                                        className="w-full px-4 py-3.5 bg-black/40 border border-gray-700 text-white rounded-xl outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder-gray-600"
+                                        className="input-premium"
                                         placeholder="Defina uma senha se desejar"
                                     />
                                 </div>
 
                                 {/* Upload PDF Box */}
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide text-[10px]">Documento PDF</label>
+                                    <label className="block text-[10px] font-bold text-[#c9a857] mb-2 uppercase tracking-wider">Documento PDF</label>
                                     <div
                                         className={cn(
-                                            "border border-dashed border-gray-600 rounded-xl p-8 text-center bg-black/20 hover:bg-black/40 transition-all relative overflow-hidden group",
-                                            dragActive === 'pdf' ? "border-blue-500 bg-blue-900/10 animate-pulse" : "",
-                                            pdfFile && "border-emerald-500 bg-emerald-900/10"
+                                            "border border-dashed rounded-xl p-8 text-center transition-all relative overflow-hidden group cursor-pointer",
+                                            dragActive === 'pdf'
+                                                ? "border-[#c9a857] bg-[#c9a857]/5 shadow-[0_0_30px_rgba(201,168,87,0.1)]"
+                                                : pdfFile
+                                                    ? "border-emerald-500/50 bg-emerald-900/10"
+                                                    : "border-white/10 bg-black/20 hover:bg-[#1e3a5f]/10 hover:border-[#c9a857]/30"
                                         )}
                                         onDragEnter={(e) => handleDrag(e, 'pdf')}
                                         onDragLeave={(e) => handleDrag(e, 'pdf')}
@@ -387,22 +384,22 @@ export function UploadPage({ supabase, session, onSuccess }) {
                                         onDrop={(e) => handleDrop(e, 'pdf')}
                                         onClick={() => !pdfFile && document.getElementById('pdf-upload').click()}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
 
-                                        <div className="flex flex-col items-center justify-center relative z-10 cursor-pointer">
+                                        <div className="flex flex-col items-center justify-center relative z-10">
                                             {pdfFile ? (
                                                 <>
                                                     <FileCheck size={48} className="text-emerald-500 mb-2 animate-scale-in drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                                    <span className="text-emerald-500 font-bold text-sm">{pdfFile.name}</span>
+                                                    <span className="text-emerald-400 font-bold text-sm">{pdfFile.name}</span>
                                                     <button onClick={(e) => { e.stopPropagation(); setPdfFile(null); }} className="text-xs text-red-400 hover:text-red-300 hover:underline mt-2 flex items-center gap-1"><X size={10} /> Remover</button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="bg-[#1e1e24] text-gray-300 p-4 rounded-full mb-3 shadow-lg group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 border border-gray-700 group-hover:border-blue-400">
+                                                    <div className="bg-[#1e3a5f]/30 text-[#c9a857] p-4 rounded-2xl mb-3 shadow-lg group-hover:scale-110 group-hover:bg-[#1e3a5f]/50 transition-all duration-300 border border-[#c9a857]/10 group-hover:border-[#c9a857]/30 group-hover:shadow-[0_0_20px_rgba(201,168,87,0.15)]">
                                                         <FileText size={24} />
                                                     </div>
-                                                    <p className="text-gray-300 font-medium text-sm mb-1">Arraste ou selecione PDF</p>
-                                                    <p className="text-gray-500 text-xs">Max 50MB</p>
+                                                    <p className="text-zinc-300 font-medium text-sm mb-1">Arraste ou selecione PDF</p>
+                                                    <p className="text-zinc-600 text-xs">Max 50MB</p>
                                                 </>
                                             )}
                                             <input type="file" accept="application/pdf" onChange={e => setPdfFile(e.target.files[0])} className="hidden" id="pdf-upload" />
@@ -412,12 +409,15 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
                                 {/* Upload Video Box */}
                                 <div>
-                                    <label className="block text-sm font-bold text-gray-400 mb-2 uppercase tracking-wide text-[10px]">Video Explicativo</label>
+                                    <label className="block text-[10px] font-bold text-[#c9a857] mb-2 uppercase tracking-wider">Video Explicativo</label>
                                     <div
                                         className={cn(
-                                            "border border-dashed border-gray-600 rounded-xl p-8 text-center bg-black/20 hover:bg-black/40 transition-all relative overflow-hidden group",
-                                            dragActive === 'video' ? "border-blue-500 bg-blue-900/10 animate-pulse" : "",
-                                            videoFile && "border-emerald-500 bg-emerald-900/10"
+                                            "border border-dashed rounded-xl p-8 text-center transition-all relative overflow-hidden group cursor-pointer",
+                                            dragActive === 'video'
+                                                ? "border-[#c9a857] bg-[#c9a857]/5 shadow-[0_0_30px_rgba(201,168,87,0.1)]"
+                                                : videoFile
+                                                    ? "border-emerald-500/50 bg-emerald-900/10"
+                                                    : "border-white/10 bg-black/20 hover:bg-[#1e3a5f]/10 hover:border-[#c9a857]/30"
                                         )}
                                         onDragEnter={(e) => handleDrag(e, 'video')}
                                         onDragLeave={(e) => handleDrag(e, 'video')}
@@ -425,22 +425,22 @@ export function UploadPage({ supabase, session, onSuccess }) {
                                         onDrop={(e) => handleDrop(e, 'video')}
                                         onClick={() => !videoFile && document.getElementById('video-upload').click()}
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
 
-                                        <div className="flex flex-col items-center justify-center relative z-10 cursor-pointer">
+                                        <div className="flex flex-col items-center justify-center relative z-10">
                                             {videoFile ? (
                                                 <>
                                                     <Video size={48} className="text-emerald-500 mb-2 animate-scale-in drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                                                    <span className="text-emerald-500 font-bold text-sm">{videoFile.name}</span>
+                                                    <span className="text-emerald-400 font-bold text-sm">{videoFile.name}</span>
                                                     <button onClick={(e) => { e.stopPropagation(); setVideoFile(null); }} className="text-xs text-red-400 hover:text-red-300 hover:underline mt-2 flex items-center gap-1"><X size={10} /> Remover</button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="bg-[#1e1e24] text-gray-300 p-4 rounded-full mb-3 shadow-lg group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 border border-gray-700 group-hover:border-indigo-400">
+                                                    <div className="bg-[#1e3a5f]/30 text-[#c9a857] p-4 rounded-2xl mb-3 shadow-lg group-hover:scale-110 group-hover:bg-[#1e3a5f]/50 transition-all duration-300 border border-[#c9a857]/10 group-hover:border-[#c9a857]/30 group-hover:shadow-[0_0_20px_rgba(201,168,87,0.15)]">
                                                         <Video size={24} />
                                                     </div>
-                                                    <p className="text-gray-300 font-medium text-sm mb-1">Arraste ou selecione Video</p>
-                                                    <p className="text-gray-500 text-xs">Max 50MB</p>
+                                                    <p className="text-zinc-300 font-medium text-sm mb-1">Arraste ou selecione Video</p>
+                                                    <p className="text-zinc-600 text-xs">Max 50MB</p>
                                                 </>
                                             )}
                                             <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files[0])} className="hidden" id="video-upload" />
@@ -455,10 +455,10 @@ export function UploadPage({ supabase, session, onSuccess }) {
                                 </div>
 
                                 {loading ? (
-                                    <div className="mt-6 bg-[#0c0c0e] p-6 rounded-xl border border-gray-700/50 animate-fade-in shadow-inner">
+                                    <div className="mt-6 bg-[#0c0c0e] p-6 rounded-xl border border-[#c9a857]/10 animate-fade-in shadow-inner">
                                         <div className="flex justify-between mb-4 relative">
                                             {/* Connecting Line */}
-                                            <div className="absolute top-4 left-0 w-full h-0.5 bg-gray-700 -z-10"></div>
+                                            <div className="absolute top-4 left-0 w-full h-0.5 bg-zinc-800 -z-10"></div>
 
                                             {['Envio do Vídeo', 'Gerando QR Code', 'Finalizando PDF'].map((step, i) => {
                                                 const currentStep = statusMsg.includes("Vídeo") ? 0 : statusMsg.includes("QR") ? 1 : statusMsg.includes("PDF") || statusMsg.includes("Enviando PDF") ? 2 : -1;
@@ -467,24 +467,25 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
                                                 return (
                                                     <div key={i} className="flex flex-col items-center flex-1">
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-500 bg-[#0c0c0e] ${isActive ? 'border-blue-500 text-blue-500 scale-125 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : isCompleted ? 'border-emerald-500 text-emerald-500' : 'border-gray-600 text-gray-600'}`}>
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-500 bg-[#0c0c0e] ${isActive ? 'border-[#c9a857] text-[#c9a857] scale-125 shadow-[0_0_15px_rgba(201,168,87,0.4)]' : isCompleted ? 'border-emerald-500 text-emerald-500' : 'border-zinc-700 text-zinc-600'}`}>
                                                             {isCompleted ? <CheckCircle size={14} /> : i + 1}
                                                         </div>
-                                                        <span className={`text-[9px] uppercase font-bold mt-2 tracking-wider ${isActive ? 'text-blue-400' : isCompleted ? 'text-emerald-400' : 'text-gray-600'}`}>{step}</span>
+                                                        <span className={`text-[9px] uppercase font-bold mt-2 tracking-wider ${isActive ? 'text-[#c9a857]' : isCompleted ? 'text-emerald-400' : 'text-zinc-600'}`}>{step}</span>
                                                     </div>
                                                 )
                                             })}
                                         </div>
-                                        <div className="text-center text-xs text-gray-400 mt-4 font-mono animate-pulse flex items-center justify-center gap-2">
-                                            <Loader2 size={12} className="animate-spin" />
+                                        <div className="text-center text-xs text-zinc-400 mt-4 font-mono animate-pulse flex items-center justify-center gap-2">
+                                            <Loader2 size={12} className="animate-spin text-[#c9a857]" />
                                             {statusMsg || "Processando..."}
                                         </div>
                                     </div>
                                 ) : (
                                     <button
                                         onClick={handleInitialProcess}
-                                        className="w-full animate-shimmer text-white py-4 rounded-xl text-base shadow-xl mt-6 uppercase tracking-widest hover:scale-[1.01] active:scale-[0.98] transition-all font-bold shadow-blue-500/20 border border-blue-400/30 relative overflow-hidden group"
+                                        className="w-full bg-gradient-to-r from-[#c9a857] to-[#aa8a39] hover:from-[#d4b76a] hover:to-[#c9a857] text-[#0a0a0b] py-4 rounded-xl text-base shadow-xl mt-6 uppercase tracking-widest hover:scale-[1.01] active:scale-[0.98] transition-all font-bold shadow-[#c9a857]/20 border border-[#c9a857]/30 relative overflow-hidden group"
                                     >
+                                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         <span className="relative z-10 flex items-center justify-center gap-2">
                                             Continuar para Editor <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                         </span>
@@ -495,10 +496,10 @@ export function UploadPage({ supabase, session, onSuccess }) {
                     </div>
 
                     {/* RIGHTSIDE: Trust & Info (Span 3) */}
-                    <div className="lg:col-span-3 space-y-8 animate-slide-up bg-[#18181b]/60 backdrop-blur-md p-6 rounded-2xl border border-gray-700/30 shadow-lg" style={{ animationDelay: '0.4s' }}>
+                    <div className="lg:col-span-3 space-y-8 animate-fade-in-up card-law" style={{ animationDelay: '0.4s' }}>
                         <div className="mb-6 flex justify-center lg:justify-end">
-                            <div className="w-16 h-16 rounded-full border border-gray-700/50 flex items-center justify-center bg-gradient-to-br from-gray-800 to-black shadow-lg ring-1 ring-white/5">
-                                <FileCheck className="text-blue-500" size={28} />
+                            <div className="w-16 h-16 rounded-2xl border border-[#c9a857]/20 flex items-center justify-center bg-gradient-to-br from-[#1e3a5f]/30 to-transparent shadow-lg ring-1 ring-[#c9a857]/10">
+                                <FileCheck className="text-[#c9a857]" size={28} />
                             </div>
                         </div>
 
@@ -506,22 +507,22 @@ export function UploadPage({ supabase, session, onSuccess }) {
                             <h3 className="text-xl font-bold text-white mb-2">
                                 Ambiente Seguro
                             </h3>
-                            <p className="text-gray-500 text-xs uppercase tracking-widest mb-4">
+                            <p className="text-zinc-500 text-xs uppercase tracking-widest mb-4">
                                 Criptografia de Ponta a Ponta
                             </p>
-                            <div className="text-blue-500 text-sm font-medium border-t border-gray-700/50 pt-4 mt-4 flex items-center justify-end gap-2">
+                            <div className="text-[#c9a857] text-sm font-medium border-t border-white/5 pt-4 mt-4 flex items-center justify-end gap-2">
                                 <CheckCircle size={14} /> Suporte 24h
                             </div>
                         </div>
 
                         <div className="pt-8">
-                            <div className="bg-[#111]/80 p-4 rounded-xl border border-gray-700/30">
-                                <h5 className="text-blue-500 text-[10px] font-bold mb-3 uppercase tracking-widest">COMO FUNCIONA?</h5>
-                                <ol className="text-xs text-gray-400 space-y-3 list-decimal list-inside text-left leading-relaxed">
-                                    <li><span className="text-gray-300">Faça upload</span> do PDF e Vídeo</li>
-                                    <li><span className="text-gray-300">Posicione o QR Code</span> visualmente</li>
-                                    <li><span className="text-gray-300">Baixe o PDF final</span> pronto</li>
-                                    <li>Anexe ao processo judicial</li>
+                            <div className="bg-[#0a0a0b]/80 p-5 rounded-xl border border-[#c9a857]/10">
+                                <h5 className="text-[#c9a857] text-[10px] font-bold mb-3 uppercase tracking-widest">COMO FUNCIONA?</h5>
+                                <ol className="text-xs text-zinc-400 space-y-3 list-decimal list-inside text-left leading-relaxed">
+                                    <li><span className="text-zinc-200">Faça upload</span> do PDF e Vídeo</li>
+                                    <li><span className="text-zinc-200">Posicione o QR Code</span> visualmente</li>
+                                    <li><span className="text-zinc-200">Baixe o PDF final</span> pronto</li>
+                                    <li><span className="text-zinc-200">Anexe</span> ao processo judicial</li>
                                 </ol>
                             </div>
                         </div>
@@ -529,8 +530,8 @@ export function UploadPage({ supabase, session, onSuccess }) {
 
                 </div>
             </main>
-            <footer className="py-6 text-center text-gray-600 text-[10px] uppercase tracking-widest flex flex-col gap-2">
-                <span>© 2026 Tecnologia Legal • Todos os direitos reservados</span>
+            <footer className="py-6 text-center text-zinc-600 text-[10px] uppercase tracking-widest flex flex-col gap-2">
+                <span>© 2026 Explicare Advocacia • Todos os direitos reservados</span>
             </footer>
         </div>
     );

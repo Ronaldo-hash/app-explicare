@@ -4,16 +4,22 @@ import {
     LogOut, Trash2, ExternalLink, Eye, Copy, FileText, Activity, Calendar,
     Users, UserPlus, Shield, Smartphone, Monitor, MapPin, Clock, Briefcase,
     CheckCircle, Lock, Loader2, Info, ChevronRight, Search, Upload, ChevronLeft, Database, HelpCircle,
-    Menu, Download
+    Menu, Download, Filter, History, RefreshCw
 } from 'lucide-react';
 import { UploadForm } from './UploadForm';
 import { Sidebar } from './Sidebar';
+import { BottomNav } from './BottomNav';
 import { ConfiguracoesPage } from './ConfiguracoesPage';
 import { useTheme } from '../context/ThemeContext';
+import { useWhitelabel } from '../context/WhitelabelContext';
 import { HelpTooltip, HELP_TEXTS } from './HelpTooltip';
+import { useOnboarding } from '../hooks/useOnboarding';
+import { useDashboardStats } from '../hooks/useDashboardStats';
 
 export function AdminDashboard({ supabase, session, onLogout }) {
     const { theme, toggleTheme } = useTheme();
+    const { background_url: whitelabelBg, refresh: refreshWhitelabel } = useWhitelabel();
+
 
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,6 +27,10 @@ export function AdminDashboard({ supabase, session, onLogout }) {
     const [notification, setNotification] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [users, setUsers] = useState([]);
+
+    // Lawyer Assignment States
+    const [teamMembers, setTeamMembers] = useState([]);
+    const [filterMyCases, setFilterMyCases] = useState(false);
 
     // Create User States
     const [newUserEmail, setNewUserEmail] = useState('');
@@ -30,6 +40,8 @@ export function AdminDashboard({ supabase, session, onLogout }) {
 
     // Current User State
     const [currentUserRole, setCurrentUserRole] = useState(null);
+    const { resetTour } = useOnboarding(currentUserRole);
+    const dashStats = useDashboardStats(supabase);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [_showDeleteUserModal, setShowDeleteUserModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
@@ -52,6 +64,7 @@ export function AdminDashboard({ supabase, session, onLogout }) {
         fetchVideos();
         checkUserRole();
         fetchUsers();
+        fetchTeamMembers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage, searchQuery]); // Re-fetch when page changes or search query updates
 
@@ -99,6 +112,19 @@ export function AdminDashboard({ supabase, session, onLogout }) {
             console.error('Error fetching users:', error);
         } else {
             setUsers(data || []);
+        }
+    };
+
+    const fetchTeamMembers = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, role')
+            .in('role', ['admin', 'member'])
+            .order('full_name', { ascending: true });
+        if (error) {
+            console.error('Error fetching team members:', error);
+        } else {
+            setTeamMembers(data || []);
         }
     };
 
@@ -157,674 +183,743 @@ export function AdminDashboard({ supabase, session, onLogout }) {
         }
         setIsDeleting(false);
     };
-    setCopiedId(slug);
-    setTimeout(() => setCopiedId(null), 2000);
-    showToast('success', 'Link copiado!');
-};
 
-const checkUserRole = async () => {
-    if (!session?.user?.id) return;
 
-    // Bypass for Demo Admin
-    if (session.user.email === 'admin@admin.com') {
-        setCurrentUserRole('admin');
-        return;
-    }
+    const checkUserRole = async () => {
+        if (!session?.user?.id) return;
 
-    const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-
-    if (data && data.role === 'admin') {
-        setCurrentUserRole('admin');
-    } else {
-        setCurrentUserRole('user');
-        if (activeTab === 'equipe') setActiveTab('processos');
-    }
-};
-
-// Delete Modal State
-const [_showDeleteModal, setShowDeleteModal] = useState(false);
-const [videoToDelete, setVideoToDelete] = useState(null);
-
-const _handleDelete = (id) => {
-    setVideoToDelete(id);
-    setShowDeleteModal(true);
-};
-
-const _confirmDelete = async () => {
-    if (!videoToDelete) return;
-    setShowDeleteModal(false); // Close immediately for UX
-
-    const { error } = await supabase.from('videos_pecas').delete().eq('id', videoToDelete);
-
-    if (!error) {
-        setVideos(videos.filter(v => v.id !== videoToDelete));
-        showToast('success', 'Processo removido com sucesso.');
-    } else {
-        showToast('error', "Erro ao excluir: " + error.message);
-    }
-    setVideoToDelete(null);
-};
-
-const handleSignOut = async () => {
-    if (typeof onLogout === 'function') {
-        onLogout();
-        return;
-    }
-    await supabase.auth.signOut();
-    window.location.reload();
-};
-
-const handleCreateUserRequest = (e) => {
-    e.preventDefault();
-    setShowConfirmModal(true);
-};
-
-const confirmCreateUser = async () => {
-    setShowConfirmModal(false);
-    setLoadingCreate(true);
-    const email = newUserEmail.trim();
-    const password = newUserPassword.trim();
-
-    if (!email || !password) {
-        showToast('error', 'Preencha email e senha.');
-        setLoadingCreate(false);
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-
-        if (data?.user && newIsAdmin) {
-            await supabase.from('profiles').update({ role: 'admin' }).eq('id', data.user.id);
+        // Bypass for Demo Admin
+        if (session.user.email === 'admin@admin.com') {
+            setCurrentUserRole('admin');
+            return;
         }
-        showToast('success', 'Novo usuário criado com sucesso.');
-        setTimeout(() => window.location.reload(), 1500);
-    } catch (err) {
-        showToast('error', err.message);
-    } finally {
-        setLoadingCreate(false);
-    }
-};
 
-const handleDeleteUserRequest = (userId) => {
-    setUserToDelete(userId);
-    setShowDeleteUserModal(true);
-};
-
-const _confirmDeleteUser = async () => {
-    if (!userToDelete) return;
-
-    try {
-        const { error } = await supabase.from('profiles').delete().eq('id', userToDelete);
-
-        if (error) throw error;
-
-        // Immediately update UI
-        setUsers(users.filter(u => u.id !== userToDelete));
-        showToast('success', 'Membro removido da equipe com sucesso.');
-    } catch (error) {
-        console.error("Erro ao deletar usuário:", error);
-        showToast('error', 'Erro ao remover. Verifique suas permissões.');
-    } finally {
-        setShowDeleteUserModal(false);
-        setUserToDelete(null);
-    }
-};
-
-const handleToggleRole = async (userId, currentRole) => {
-    const newRole = currentRole === 'admin' ? 'member' : 'admin';
-    try {
-        const { error } = await supabase
+        const { data } = await supabase
             .from('profiles')
-            .update({ role: newRole })
-            .eq('id', userId);
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
 
-        if (error) throw error;
+        if (data && data.role === 'admin') {
+            setCurrentUserRole('admin');
+        } else {
+            setCurrentUserRole('user');
+            if (activeTab === 'equipe') setActiveTab('processos');
+        }
+    };
 
-        // Update UI immediately
-        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-        showToast('success', newRole === 'admin' ? 'Usuário promovido a Admin!' : 'Usuário rebaixado a Membro.');
-    } catch (error) {
-        console.error('Erro ao alterar role:', error);
-        showToast('error', 'Erro ao alterar permissões.');
-    }
-};
+    // Delete Modal State
+    const [_showDeleteModal, setShowDeleteModal] = useState(false);
+    const [videoToDelete, setVideoToDelete] = useState(null);
 
-// --- RENDER ---
+    const _handleDelete = (id) => {
+        setVideoToDelete(id);
+        setShowDeleteModal(true);
+    };
 
-return (
-    <div className="flex h-screen w-full overflow-hidden bg-premium text-white font-sans">
-        {/* Left Sidebar */}
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleSignOut} userRole={currentUserRole} />
+    const _confirmDelete = async () => {
+        if (!videoToDelete) return;
+        setShowDeleteModal(false); // Close immediately for UX
 
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
-            {/* Premium Background Effect */}
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div
-                    className="absolute inset-0 opacity-20"
-                    style={{
-                        backgroundImage: 'url(https://zrssvsfxxtjieoyurzms.supabase.co/storage/v1/object/sign/arquivos%20da%20empresa/fundo%20site.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mMGYzMmMyYS05ODRhLTQwMjctOTA1YS05NGU1NWQ3ZmY3NzEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcnF1aXZvcyBkYSBlbXByZXNhL2Z1bmRvIHNpdGUucG5nIiwiaWF0IjoxNzcwMTg4ODIyLCJleHAiOjE4MDE3MjQ4MjJ9._Ov3-JO41bj6oDDjyMV3PkOUDVLe1ETN8hskLn0vfQ8)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                    }}
-                />
-                <div className="absolute inset-0 bg-[#0c0c0e]/90" />
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#1e3a5f]/20 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#c9a857]/10 rounded-full blur-3xl" />
-            </div>
+        const { error } = await supabase.from('videos_pecas').delete().eq('id', videoToDelete);
 
-            {/* Top Header */}
-            <header className="w-full h-16 lg:h-20 px-4 lg:px-8 flex items-center justify-end gap-3 z-30 mt-12 lg:mt-0 relative">
-                {/* Theme Toggle */}
-                <button
-                    onClick={toggleTheme}
-                    className="p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 border border-white/5 transition-all duration-300 group"
-                    title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-                >
-                    {theme === 'dark' ? (
-                        <svg className="w-5 h-5 text-[#c9a857] group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    ) : (
-                        <svg className="w-5 h-5 text-[#1e3a5f] group-hover:-rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                    )}
-                </button>
+        if (!error) {
+            setVideos(videos.filter(v => v.id !== videoToDelete));
+            showToast('success', 'Processo removido com sucesso.');
+        } else {
+            showToast('error', "Erro ao excluir: " + error.message);
+        }
+        setVideoToDelete(null);
+    };
 
-                <div className="glass-card flex items-center gap-3 py-2 px-4 cursor-pointer hover:border-[#c9a857]/30 transition-all duration-300">
-                    <span className="text-gray-300 text-sm font-medium hidden sm:block">{session?.user?.email}</span>
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#1e3a5f] flex items-center justify-center">
-                        <span className="text-[#c9a857] font-bold text-sm">
-                            {session?.user?.email?.charAt(0).toUpperCase()}
-                        </span>
-                    </div>
+    const handleSignOut = async () => {
+        if (typeof onLogout === 'function') {
+            onLogout();
+            return;
+        }
+        await supabase.auth.signOut();
+        window.location.reload();
+    };
+
+    const handleCreateUserRequest = (e) => {
+        e.preventDefault();
+        setShowConfirmModal(true);
+    };
+
+    const confirmCreateUser = async () => {
+        setShowConfirmModal(false);
+        setLoadingCreate(true);
+        const email = newUserEmail.trim();
+        const password = newUserPassword.trim();
+
+        if (!email || !password) {
+            showToast('error', 'Preencha email e senha.');
+            setLoadingCreate(false);
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase.auth.signUp({ email, password });
+            if (error) throw error;
+
+            if (data?.user && newIsAdmin) {
+                await supabase.from('profiles').update({ role: 'admin' }).eq('id', data.user.id);
+            }
+            showToast('success', 'Novo usuário criado com sucesso.');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            showToast('error', err.message);
+        } finally {
+            setLoadingCreate(false);
+        }
+    };
+
+    const handleDeleteUserRequest = (userId) => {
+        setUserToDelete(userId);
+        setShowDeleteUserModal(true);
+    };
+
+    const _confirmDeleteUser = async () => {
+        if (!userToDelete) return;
+
+        try {
+            const { error } = await supabase.from('profiles').delete().eq('id', userToDelete);
+
+            if (error) throw error;
+
+            // Immediately update UI
+            setUsers(users.filter(u => u.id !== userToDelete));
+            showToast('success', 'Membro removido da equipe com sucesso.');
+        } catch (error) {
+            console.error("Erro ao deletar usuário:", error);
+            showToast('error', 'Erro ao remover. Verifique suas permissões.');
+        } finally {
+            setShowDeleteUserModal(false);
+            setUserToDelete(null);
+        }
+    };
+
+    const handleToggleRole = async (userId, currentRole) => {
+        const newRole = currentRole === 'admin' ? 'member' : 'admin';
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({ role: newRole })
+                .eq('id', userId);
+
+            if (error) throw error;
+
+            // Update UI immediately
+            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+            showToast('success', newRole === 'admin' ? 'Usuário promovido a Admin!' : 'Usuário rebaixado a Membro.');
+        } catch (error) {
+            console.error('Erro ao alterar role:', error);
+            showToast('error', 'Erro ao alterar permissões.');
+        }
+    };
+
+    // --- RENDER ---
+
+    return (
+        <div className="flex h-screen w-full overflow-hidden bg-premium text-white font-sans">
+            {/* Left Sidebar */}
+            <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleSignOut} userRole={currentUserRole} />
+            <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+            {/* Main Content Area */}
+            <main className="flex-1 flex flex-col h-full relative overflow-y-auto">
+                {/* Premium Background Effect */}
+                <div className="fixed inset-0 pointer-events-none z-0">
+                    <div
+                        className="absolute inset-0"
+                        style={{
+                            backgroundImage: `url(${whitelabelBg || 'https://zrssvsfxxtjieoyurzms.supabase.co/storage/v1/object/sign/arquivos%20da%20empresa/fundo%20site.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mMGYzMmMyYS05ODRhLTQwMjctOTA1YS05NGU1NWQ3ZmY3NzEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcnF1aXZvcyBkYSBlbXByZXNhL2Z1bmRvIHNpdGUucG5nIiwiaWF0IjoxNzcwMTg4ODIyLCJleHAiOjE4MDE3MjQ4MjJ9._Ov3-JO41bj6oDDjyMV3PkOUDVLe1ETN8hskLn0vfQ8'})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-[#0c0c0e]/15" />
                 </div>
-            </header>
 
-            <div className="flex-1 px-4 lg:px-8 pb-10 overflow-x-hidden relative z-10">
-                <div className="w-full h-full flex flex-col">
-                    {/* Notifications */}
-                    {notification && (
-                        <div className={`fixed top-6 right-6 z-[100] animate-slide-in glass-card px-6 py-4 flex items-center gap-3 ${notification.type === 'success' ? 'border-emerald-500/30 text-emerald-400' : 'border-red-500/30 text-red-400'}`}>
-                            {notification.type === 'success' ? <CheckCircle size={18} /> : <LogOut size={18} />}
-                            <span className="font-medium text-sm">{notification.message}</span>
+                {/* Top Header */}
+                <header className="w-full h-16 lg:h-20 px-4 lg:px-8 flex items-center justify-end gap-3 z-30 relative">
+                    {/* Theme Toggle */}
+                    <button
+                        id="onboarding-theme-toggle"
+                        onClick={toggleTheme}
+                        className="p-2.5 rounded-lg bg-zinc-800/50 hover:bg-zinc-700/50 border border-white/5 transition-all duration-300 group"
+                        title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                    >
+                        {theme === 'dark' ? (
+                            <svg className="w-5 h-5 text-[#c9a857] group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 text-[#1e3a5f] group-hover:-rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        )}
+                    </button>
+
+                    <div id="onboarding-user-avatar" className="glass-card flex items-center gap-3 py-2 px-4 cursor-pointer hover:border-[#c9a857]/30 transition-all duration-300">
+                        <span className="text-gray-300 text-sm font-medium hidden sm:block">{session?.user?.email}</span>
+                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#1e3a5f] flex items-center justify-center">
+                            <span className="text-[#c9a857] font-bold text-sm">
+                                {session?.user?.email?.charAt(0).toUpperCase()}
+                            </span>
                         </div>
-                    )}
+                    </div>
+                </header>
 
-                    {/* Tab Content */}
-                    {activeTab === 'dashboard' && (
-                        <div className="animate-fade-in space-y-6">
-                            {/* Hero Card */}
-                            <div className="card-premium">
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                                    <div>
-                                        <h1 className="text-2xl lg:text-3xl font-semibold text-white mb-2">
-                                            Bom dia, <span className="text-[#c9a857]">{session?.user?.email?.split('@')[0]}</span>
-                                        </h1>
-                                        <p className="text-zinc-500 text-sm lg:text-base max-w-lg">
-                                            Painel de gestão jurídica. Gerencie processos, acompanhe métricas e organize sua equipe.
-                                        </p>
+                <div className="flex-1 px-4 lg:px-8 pb-10 overflow-x-hidden relative z-10 mobile-bottom-padding">
+                    <div className="w-full h-full flex flex-col">
+                        {/* Notifications */}
+                        {notification && (
+                            <div className={`fixed top-6 right-6 z-[100] animate-slide-in glass-card px-6 py-4 flex items-center gap-3 ${notification.type === 'success' ? 'border-emerald-500/30 text-emerald-400' : 'border-red-500/30 text-red-400'}`}>
+                                {notification.type === 'success' ? <CheckCircle size={18} /> : <LogOut size={18} />}
+                                <span className="font-medium text-sm">{notification.message}</span>
+                            </div>
+                        )}
+
+                        {/* Tab Content */}
+                        {activeTab === 'dashboard' && (
+                            <div className="animate-fade-in space-y-6">
+                                {/* Hero Card */}
+                                <div id="onboarding-hero-card" className="card-premium">
+                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                                        <div>
+                                            <h1 className="text-2xl lg:text-3xl font-semibold text-white mb-2">
+                                                Bom dia, <span className="text-gradient-hero">{session?.user?.email?.split('@')[0]}</span>
+                                            </h1>
+                                            <p className="text-zinc-500 text-sm lg:text-base max-w-lg">
+                                                Painel de gestão jurídica. Gerencie processos, acompanhe métricas e organize sua equipe.
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setActiveTab('upload')}
+                                                className="btn-primary flex items-center gap-2"
+                                            >
+                                                <Upload size={16} /> Novo Processo
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTab('processos')}
+                                                className="btn-secondary flex items-center gap-2"
+                                            >
+                                                <Briefcase size={16} /> Ver Casos
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setActiveTab('upload')}
-                                            className="btn-primary flex items-center gap-2"
-                                        >
-                                            <Upload size={16} /> Novo Processo
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('processos')}
-                                            className="btn-secondary flex items-center gap-2"
-                                        >
-                                            <Briefcase size={16} /> Ver Casos
-                                        </button>
+                                </div>
+
+                                {/* Stats Grid */}
+                                <div id="onboarding-stats-grid" className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Processos */}
+                                    <div
+                                        onClick={() => setActiveTab('processos')}
+                                        className="card-law cursor-pointer group animate-fade-in-up stagger-1"
+                                    >
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
+                                                    <FileText size={20} className="text-[#c9a857]" />
+                                                </div>
+                                                <HelpTooltip title={HELP_TEXTS.processosAtivos.title} content={HELP_TEXTS.processosAtivos.content} position="right" />
+                                            </div>
+                                            <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        </div>
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Processos Ativos</p>
+                                        <div className="flex items-baseline gap-1">
+                                            {loading ? (
+                                                <div className="skeleton h-8 w-16 rounded-md"></div>
+                                            ) : (
+                                                <>
+                                                    <span className="text-3xl font-semibold text-white">{totalItems}</span>
+                                                    <span className="text-zinc-600 text-sm">casos</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Equipe */}
+                                    <div
+                                        onClick={() => setActiveTab('equipe')}
+                                        className="card-law cursor-pointer group animate-fade-in-up stagger-2"
+                                    >
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
+                                                    <Users size={20} className="text-[#c9a857]" />
+                                                </div>
+                                                <HelpTooltip title={HELP_TEXTS.equipe.title} content={HELP_TEXTS.equipe.content} position="right" />
+                                            </div>
+                                            <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        </div>
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Equipe</p>
+                                        <div className="flex items-baseline gap-1">
+                                            {loading ? (
+                                                <div className="skeleton h-8 w-16 rounded-md"></div>
+                                            ) : (
+                                                <>
+                                                    <span className="text-3xl font-semibold text-white">{users.length}</span>
+                                                    <span className="text-zinc-600 text-sm">membros</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Métricas */}
+                                    <div
+                                        onClick={() => setActiveTab('reports')}
+                                        className="card-law cursor-pointer group animate-fade-in-up stagger-3"
+                                    >
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
+                                                    <Activity size={20} className="text-[#c9a857]" />
+                                                </div>
+                                                <HelpTooltip title={HELP_TEXTS.relatorios.title} content={HELP_TEXTS.relatorios.content} position="right" />
+                                            </div>
+                                            <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        </div>
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Relatórios</p>
+                                        <span className="badge-success">Atualizado</span>
                                     </div>
                                 </div>
                             </div>
+                        )}
 
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Processos */}
-                                <div
-                                    onClick={() => setActiveTab('processos')}
-                                    className="card-law cursor-pointer group"
-                                >
-                                    <div className="flex items-center justify-between mb-4">
+                        {activeTab === 'processos' && (
+                            <div className="animate-fade-in h-full">
+                                <ClientProcessView
+                                    videos={videos}
+                                    loading={loading}
+                                    searchQuery={searchQuery}
+                                    setSearchQuery={setSearchQuery}
+                                    copyLink={copyLink}
+                                    copiedId={copiedId}
+                                    onNewUpload={() => setActiveTab('upload')}
+                                    supabase={supabase}
+                                    session={session}
+                                    setNewUserEmail={setNewUserEmail}
+                                    setNewIsAdmin={setNewIsAdmin}
+                                    setShowConfirmModal={setShowConfirmModal}
+
+                                    // Lawyer Assignment Props
+                                    teamMembers={teamMembers}
+                                    filterMyCases={filterMyCases}
+                                    setFilterMyCases={setFilterMyCases}
+
+                                    // Delete Client Props
+                                    showDeleteClientModal={showDeleteClientModal}
+                                    setShowDeleteClientModal={setShowDeleteClientModal}
+                                    deleteClientConfirmation={deleteClientConfirmation}
+                                    setDeleteClientConfirmation={setDeleteClientConfirmation}
+                                    handleDeleteClient={handleDeleteClient}
+                                    isDeleting={isDeleting}
+
+                                    // Delete Process Props
+                                    showDeleteProcessModal={showDeleteProcessModal}
+                                    setShowDeleteProcessModal={setShowDeleteProcessModal}
+                                    processToDelete={processToDelete}
+                                    setProcessToDelete={setProcessToDelete}
+                                    handleDeleteProcess={handleDeleteProcess}
+                                    fetchVideos={fetchVideos}
+                                />
+                            </div>
+                        )}
+
+                        {activeTab === 'upload' && (
+                            <div className="animate-fade-in-up w-full flex justify-center h-full">
+                                <div className="w-full h-full">
+                                    <UploadForm supabase={supabase} session={session} teamMembers={teamMembers} onSuccess={() => {
+                                        setActiveTab('processos');
+                                        setSearchQuery('');
+                                        setCurrentPage(1);
+                                        fetchVideos();
+                                        showToast('success', 'Upload concluído!');
+                                    }} />
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'equipe' && (
+                            <div className="animate-fade-in space-y-6">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-5 border-b border-white/5">
+                                    <div>
                                         <div className="flex items-center gap-2">
+                                            <h1 className="text-xl font-semibold text-white">Gestão de Equipe</h1>
+                                            <HelpTooltip title={HELP_TEXTS.equipeAdmin.title} content={HELP_TEXTS.equipeAdmin.content} position="right" />
+                                        </div>
+                                        <p className="text-zinc-500 text-sm mt-1">Gerencie os membros que têm acesso ao portal</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => { navigator.clipboard.writeText(window.location.origin + '/cadastro'); showToast('success', 'Link copiado!'); }}
+                                            className="btn-secondary flex items-center gap-2 text-xs"
+                                        >
+                                            <Copy size={14} /> Link de Cadastro
+                                        </button>
+                                        <HelpTooltip title={HELP_TEXTS.linkCadastro.title} content={HELP_TEXTS.linkCadastro.content} position="left" />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <div className="card-law p-6 h-fit sticky top-28">
+                                        <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                                            <div className="p-1.5 bg-[#1e3a5f] rounded"><UserPlus size={14} className="text-[#c9a857]" /></div>
+                                            Adicionar Membro
+                                        </h3>
+                                        <form onSubmit={handleCreateUserRequest} className="space-y-4">
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">E-mail</label>
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={newUserEmail}
+                                                    onChange={e => setNewUserEmail(e.target.value)}
+                                                    className="input-premium"
+                                                    placeholder="colaborador@email.com"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Senha</label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    minLength={6}
+                                                    value={newUserPassword}
+                                                    onChange={e => setNewUserPassword(e.target.value)}
+                                                    className="input-premium"
+                                                    placeholder="••••••"
+                                                />
+                                            </div>
+                                            {/* Admin Toggle */}
+                                            <div className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-lg border border-white/5">
+                                                <input
+                                                    type="checkbox"
+                                                    id="isAdminCheck"
+                                                    checked={newIsAdmin}
+                                                    onChange={e => setNewIsAdmin(e.target.checked)}
+                                                    className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-[#c9a857] focus:ring-[#c9a857] focus:ring-offset-0"
+                                                />
+                                                <label htmlFor="isAdminCheck" className="text-sm text-zinc-300 cursor-pointer flex items-center gap-2">
+                                                    <Shield size={14} className="text-[#c9a857]" />
+                                                    Criar como Administrador
+                                                </label>
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                disabled={loadingCreate}
+                                                className="btn-primary w-full flex justify-center items-center gap-2 mt-2"
+                                            >
+                                                {loadingCreate ? <Loader2 size={14} className="animate-spin" /> : 'Criar Conta'}
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <div className="lg:col-span-2 space-y-3">
+                                        {users.map(user => (
+                                            <div key={user.id} className="card-law p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-medium text-sm ${user.role === 'admin' ? 'bg-[#1e3a5f] text-[#c9a857]' : 'bg-zinc-800 text-zinc-400'}`}>
+                                                        {user.email.slice(0, 2).toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="text-white font-medium text-sm">{user.email}</h4>
+                                                        <p className="text-xs text-zinc-500 flex items-center gap-1">
+                                                            {user.role === 'admin' ? (
+                                                                <><Shield size={10} className="text-[#c9a857]" /> Administrador</>
+                                                            ) : (
+                                                                'Membro'
+                                                            )}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {session.user.id !== user.id && (
+                                                    <div className="flex items-center gap-2">
+                                                        {/* Promote/Demote Button */}
+                                                        <button
+                                                            onClick={() => handleToggleRole(user.id, user.role)}
+                                                            className={`text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${user.role === 'admin'
+                                                                ? 'text-zinc-400 bg-zinc-800 hover:bg-zinc-700'
+                                                                : 'text-[#c9a857] bg-[#c9a857]/10 hover:bg-[#c9a857]/20'
+                                                                }`}
+                                                            title={user.role === 'admin' ? 'Rebaixar para Membro' : 'Promover a Admin'}
+                                                        >
+                                                            <Shield size={12} />
+                                                            {user.role === 'admin' ? 'Rebaixar' : 'Promover'}
+                                                        </button>
+                                                        {/* Delete Button */}
+                                                        <button
+                                                            onClick={() => handleDeleteUserRequest(user.id)}
+                                                            className="text-red-400 bg-red-500/10 p-2 rounded-lg hover:bg-red-500/20 transition-colors"
+                                                            title="Remover membro"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Reports View */}
+                        {activeTab === 'reports' && (
+                            <div className="animate-fade-in space-y-5 flex-1 pb-16">
+                                {/* Header */}
+                                <div className="mb-6 pb-5 border-b border-white/5">
+                                    <h1 className="text-xl font-semibold text-white">Dashboard Analítico</h1>
+                                    <p className="text-zinc-500 text-sm mt-1">Visão geral do sistema e métricas de desempenho</p>
+                                </div>
+
+                                {/* Main Stats Row */}
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="card-law group">
+                                        <div className="flex items-center justify-between mb-3">
                                             <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
                                                 <FileText size={20} className="text-[#c9a857]" />
                                             </div>
-                                            <HelpTooltip title={HELP_TEXTS.processosAtivos.title} content={HELP_TEXTS.processosAtivos.content} position="right" />
+                                            {!dashStats.loading && (
+                                                <span className={`text-xs px-2 py-1 rounded-full ${dashStats.growthPercent >= 0
+                                                    ? 'text-emerald-400 bg-emerald-500/10'
+                                                    : 'text-red-400 bg-red-500/10'
+                                                    }`}>
+                                                    {dashStats.growthPercent >= 0 ? '+' : ''}{dashStats.growthPercent}%
+                                                </span>
+                                            )}
                                         </div>
-                                        <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Processos</p>
+                                        <span className="text-2xl font-semibold text-white">{totalItems}</span>
                                     </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Processos Ativos</p>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl font-semibold text-white">{totalItems}</span>
-                                        <span className="text-zinc-600 text-sm">casos</span>
-                                    </div>
-                                </div>
 
-                                {/* Equipe */}
-                                <div
-                                    onClick={() => setActiveTab('equipe')}
-                                    className="card-law cursor-pointer group"
-                                >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
+                                    <div className="card-law group">
+                                        <div className="flex items-center justify-between mb-3">
                                             <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
                                                 <Users size={20} className="text-[#c9a857]" />
                                             </div>
-                                            <HelpTooltip title={HELP_TEXTS.equipe.title} content={HELP_TEXTS.equipe.content} position="right" />
+                                            <span className="text-[#c9a857] text-xs bg-[#c9a857]/10 px-2 py-1 rounded-full">Ativo</span>
                                         </div>
-                                        <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Clientes</p>
+                                        <span className="text-2xl font-semibold text-white">{videos.length > 0 ? new Set(videos.map(v => v.titulo_peca)).size : 0}</span>
                                     </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Equipe</p>
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-3xl font-semibold text-white">{users.length}</span>
-                                        <span className="text-zinc-600 text-sm">membros</span>
-                                    </div>
-                                </div>
 
-                                {/* Métricas */}
-                                <div
-                                    onClick={() => setActiveTab('reports')}
-                                    className="card-law cursor-pointer group"
-                                >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center gap-2">
+                                    <div className="card-law group">
+                                        <div className="flex items-center justify-between mb-3">
                                             <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
-                                                <Activity size={20} className="text-[#c9a857]" />
+                                                <Eye size={20} className="text-[#c9a857]" />
                                             </div>
-                                            <HelpTooltip title={HELP_TEXTS.relatorios.title} content={HELP_TEXTS.relatorios.content} position="right" />
                                         </div>
-                                        <ChevronRight size={18} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Visualizações</p>
+                                        <span className="text-2xl font-semibold text-white">{videos.reduce((acc, v) => acc + (v.views || 0), 0)}</span>
                                     </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Relatórios</p>
-                                    <span className="badge-success">Atualizado</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
 
-                    {activeTab === 'processos' && (
-                        <div className="animate-fade-in h-full">
-                            <ClientProcessView
-                                videos={videos}
-                                loading={loading}
-                                searchQuery={searchQuery}
-                                setSearchQuery={setSearchQuery}
-                                copyLink={copyLink}
-                                copiedId={copiedId}
-                                onNewUpload={() => setActiveTab('upload')}
-                                supabase={supabase}
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === 'upload' && (
-                        <div className="animate-fade-in-up w-full flex justify-center h-full">
-                            <div className="w-full h-full">
-                                <UploadForm supabase={supabase} session={session} onSuccess={() => {
-                                    setActiveTab('processos');
-                                    setSearchQuery('');
-                                    setCurrentPage(1);
-                                    fetchVideos();
-                                    showToast('success', 'Upload concluído!');
-                                }} />
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'equipe' && (
-                        <div className="animate-fade-in space-y-6">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-5 border-b border-white/5">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h1 className="text-xl font-semibold text-white">Gestão de Equipe</h1>
-                                        <HelpTooltip title={HELP_TEXTS.equipeAdmin.title} content={HELP_TEXTS.equipeAdmin.content} position="right" />
-                                    </div>
-                                    <p className="text-zinc-500 text-sm mt-1">Gerencie os membros que têm acesso ao portal</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => { navigator.clipboard.writeText(window.location.origin + '/cadastro'); showToast('success', 'Link copiado!'); }}
-                                        className="btn-secondary flex items-center gap-2 text-xs"
-                                    >
-                                        <Copy size={14} /> Link de Cadastro
-                                    </button>
-                                    <HelpTooltip title={HELP_TEXTS.linkCadastro.title} content={HELP_TEXTS.linkCadastro.content} position="left" />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <div className="card-law p-6 h-fit sticky top-28">
-                                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                                        <div className="p-1.5 bg-[#1e3a5f] rounded"><UserPlus size={14} className="text-[#c9a857]" /></div>
-                                        Adicionar Membro
-                                    </h3>
-                                    <form onSubmit={handleCreateUserRequest} className="space-y-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">E-mail</label>
-                                            <input
-                                                type="email"
-                                                required
-                                                value={newUserEmail}
-                                                onChange={e => setNewUserEmail(e.target.value)}
-                                                className="input-premium"
-                                                placeholder="colaborador@email.com"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Senha</label>
-                                            <input
-                                                type="text"
-                                                required
-                                                minLength={6}
-                                                value={newUserPassword}
-                                                onChange={e => setNewUserPassword(e.target.value)}
-                                                className="input-premium"
-                                                placeholder="••••••"
-                                            />
-                                        </div>
-                                        {/* Admin Toggle */}
-                                        <div className="flex items-center gap-3 p-3 bg-zinc-900/50 rounded-lg border border-white/5">
-                                            <input
-                                                type="checkbox"
-                                                id="isAdminCheck"
-                                                checked={newIsAdmin}
-                                                onChange={e => setNewIsAdmin(e.target.checked)}
-                                                className="w-4 h-4 rounded bg-zinc-800 border-zinc-600 text-[#c9a857] focus:ring-[#c9a857] focus:ring-offset-0"
-                                            />
-                                            <label htmlFor="isAdminCheck" className="text-sm text-zinc-300 cursor-pointer flex items-center gap-2">
-                                                <Shield size={14} className="text-[#c9a857]" />
-                                                Criar como Administrador
-                                            </label>
-                                        </div>
-                                        <button
-                                            type="submit"
-                                            disabled={loadingCreate}
-                                            className="btn-primary w-full flex justify-center items-center gap-2 mt-2"
-                                        >
-                                            {loadingCreate ? <Loader2 size={14} className="animate-spin" /> : 'Criar Conta'}
-                                        </button>
-                                    </form>
-                                </div>
-
-                                <div className="lg:col-span-2 space-y-3">
-                                    {users.map(user => (
-                                        <div key={user.id} className="card-law p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-medium text-sm ${user.role === 'admin' ? 'bg-[#1e3a5f] text-[#c9a857]' : 'bg-zinc-800 text-zinc-400'}`}>
-                                                    {user.email.slice(0, 2).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-white font-medium text-sm">{user.email}</h4>
-                                                    <p className="text-xs text-zinc-500 flex items-center gap-1">
-                                                        {user.role === 'admin' ? (
-                                                            <><Shield size={10} className="text-[#c9a857]" /> Administrador</>
-                                                        ) : (
-                                                            'Membro'
-                                                        )}
-                                                    </p>
-                                                </div>
+                                    <div className="card-law group">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
+                                                <Shield size={20} className="text-[#c9a857]" />
                                             </div>
-                                            {session.user.id !== user.id && (
-                                                <div className="flex items-center gap-2">
-                                                    {/* Promote/Demote Button */}
-                                                    <button
-                                                        onClick={() => handleToggleRole(user.id, user.role)}
-                                                        className={`text-xs px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${user.role === 'admin'
-                                                            ? 'text-zinc-400 bg-zinc-800 hover:bg-zinc-700'
-                                                            : 'text-[#c9a857] bg-[#c9a857]/10 hover:bg-[#c9a857]/20'
-                                                            }`}
-                                                        title={user.role === 'admin' ? 'Rebaixar para Membro' : 'Promover a Admin'}
-                                                    >
-                                                        <Shield size={12} />
-                                                        {user.role === 'admin' ? 'Rebaixar' : 'Promover'}
-                                                    </button>
-                                                    {/* Delete Button */}
-                                                    <button
-                                                        onClick={() => handleDeleteUserRequest(user.id)}
-                                                        className="text-red-400 bg-red-500/10 p-2 rounded-lg hover:bg-red-500/20 transition-colors"
-                                                        title="Remover membro"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                        </div>
+                                        <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Equipe</p>
+                                        <span className="text-2xl font-semibold text-white">{users.length}</span>
+                                    </div>
+                                </div>
+
+                                {/* Charts Row */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {/* Process Types Distribution — REAL DATA */}
+                                    <div className="card-law">
+                                        <h3 className="text-base font-medium text-white mb-4">Processos por Tipo</h3>
+                                        <div className="space-y-3">
+                                            {dashStats.loading ? (
+                                                <>
+                                                    {[1, 2, 3].map(i => (
+                                                        <div key={i}>
+                                                            <div className="skeleton h-4 w-2/3 rounded mb-2"></div>
+                                                            <div className="skeleton h-2 w-full rounded-full"></div>
+                                                        </div>
+                                                    ))}
+                                                </>
+                                            ) : dashStats.processByType.length > 0 ? (
+                                                dashStats.processByType.map((item, i) => (
+                                                    <div key={i}>
+                                                        <div className="flex justify-between text-sm mb-1">
+                                                            <span className="text-zinc-400">{item.label}</span>
+                                                            <span className="text-white font-medium">{item.value}% <span className="text-zinc-600 text-xs">({item.count})</span></span>
+                                                        </div>
+                                                        <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full rounded-full transition-all duration-500"
+                                                                style={{ width: `${item.value}%`, backgroundColor: item.color }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-zinc-500 text-sm text-center py-4">Nenhum processo cadastrado</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Monthly Activity — REAL DATA */}
+                                    <div className="card-law">
+                                        <h3 className="text-base font-medium text-white mb-4">Atividade Mensal</h3>
+                                        <div className="flex items-end justify-between h-32 gap-2">
+                                            {dashStats.loading ? (
+                                                [1, 2, 3, 4, 5, 6].map(i => (
+                                                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                                        <div className="skeleton w-full rounded-t-lg" style={{ height: `${30 + i * 10}%` }} />
+                                                        <div className="skeleton h-3 w-6 rounded"></div>
+                                                    </div>
+                                                ))
+                                            ) : dashStats.monthlyActivity.length > 0 ? (
+                                                dashStats.monthlyActivity.map((month) => (
+                                                    <div key={month.label} className="flex-1 flex flex-col items-center gap-2 group">
+                                                        <span className="text-[10px] text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity">{month.count}</span>
+                                                        <div
+                                                            className="w-full bg-gradient-to-t from-[#1e3a5f] to-[#c9a857]/80 rounded-t-lg transition-all hover:opacity-80"
+                                                            style={{ height: `${month.heightPercent}%` }}
+                                                        />
+                                                        <span className="text-zinc-600 text-[10px] uppercase">{month.label}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-zinc-500 text-sm text-center w-full py-4">Sem dados</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activity & Storage */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                    {/* Recent Activity */}
+                                    <div className="card-law lg:col-span-2">
+                                        <h3 className="text-base font-medium text-white mb-4">Atividade Recente</h3>
+                                        <div className="space-y-3">
+                                            {videos.slice(0, 5).map((video) => (
+                                                <div key={video.id} className="flex items-center gap-3 p-3 bg-zinc-800/30 rounded-lg">
+                                                    <div className="w-8 h-8 rounded-lg bg-[#1e3a5f] flex items-center justify-center shrink-0">
+                                                        <FileText size={14} className="text-[#c9a857]" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm text-white truncate">{video.titulo_peca || 'Processo'}</p>
+                                                        <p className="text-xs text-zinc-500">Nº {video.processo}</p>
+                                                    </div>
+                                                    <div className="text-xs text-zinc-500">
+                                                        {new Date(video.created_at).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {videos.length === 0 && (
+                                                <div className="text-center py-8 text-zinc-500 text-sm">
+                                                    Nenhuma atividade recente
                                                 </div>
                                             )}
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                                    </div>
 
-                    {/* Reports View */}
-                    {activeTab === 'reports' && (
-                        <div className="animate-fade-in space-y-5 flex-1">
-                            {/* Header */}
-                            <div className="mb-6 pb-5 border-b border-white/5">
-                                <h1 className="text-xl font-semibold text-white">Dashboard Analítico</h1>
-                                <p className="text-zinc-500 text-sm mt-1">Visão geral do sistema e métricas de desempenho</p>
-                            </div>
-
-                            {/* Main Stats Row */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="card-law group">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
-                                            <FileText size={20} className="text-[#c9a857]" />
+                                    {/* Storage & System — REAL DATA */}
+                                    <div className="space-y-4">
+                                        <div className="card-law">
+                                            <h3 className="text-sm font-medium text-white mb-3">Armazenamento</h3>
+                                            {dashStats.loading ? (
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="skeleton w-24 h-24 rounded-full"></div>
+                                                    <div className="skeleton h-3 w-32 rounded"></div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="relative w-24 h-24 mx-auto mb-3">
+                                                        <svg className="w-full h-full -rotate-90">
+                                                            <circle cx="48" cy="48" r="40" stroke="#27272a" strokeWidth="8" fill="none" />
+                                                            <circle
+                                                                cx="48" cy="48" r="40"
+                                                                stroke={dashStats.storagePercent > 80 ? '#ef4444' : '#c9a857'}
+                                                                strokeWidth="8"
+                                                                fill="none"
+                                                                strokeDasharray={`${(dashStats.storagePercent / 100) * 251.2} 251.2`}
+                                                                strokeLinecap="round"
+                                                                className="transition-all duration-700"
+                                                            />
+                                                        </svg>
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <span className="text-xl font-semibold text-white">{dashStats.storagePercent}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-center text-zinc-500 text-xs">
+                                                        {dashStats.storageUsedMB >= 1024
+                                                            ? `${(dashStats.storageUsedMB / 1024).toFixed(1)} GB`
+                                                            : `${dashStats.storageUsedMB} MB`
+                                                        } de {dashStats.storageTotalMB >= 1024 ? `${dashStats.storageTotalMB / 1024} GB` : `${dashStats.storageTotalMB} MB`} usado
+                                                    </p>
+                                                </>
+                                            )}
                                         </div>
-                                        <span className="text-emerald-400 text-xs bg-emerald-500/10 px-2 py-1 rounded-full">+12%</span>
-                                    </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Processos</p>
-                                    <span className="text-2xl font-semibold text-white">{totalItems}</span>
-                                </div>
 
-                                <div className="card-law group">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
-                                            <Users size={20} className="text-[#c9a857]" />
-                                        </div>
-                                        <span className="text-[#c9a857] text-xs bg-[#c9a857]/10 px-2 py-1 rounded-full">Ativo</span>
-                                    </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Clientes</p>
-                                    <span className="text-2xl font-semibold text-white">{videos.length > 0 ? new Set(videos.map(v => v.titulo_peca)).size : 0}</span>
-                                </div>
-
-                                <div className="card-law group">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
-                                            <Eye size={20} className="text-[#c9a857]" />
-                                        </div>
-                                    </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Visualizações</p>
-                                    <span className="text-2xl font-semibold text-white">{videos.reduce((acc, v) => acc + (v.views || 0), 0)}</span>
-                                </div>
-
-                                <div className="card-law group">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="w-10 h-10 rounded-lg bg-[#1e3a5f] flex items-center justify-center">
-                                            <Shield size={20} className="text-[#c9a857]" />
-                                        </div>
-                                    </div>
-                                    <p className="text-zinc-500 text-xs uppercase tracking-wider mb-1">Equipe</p>
-                                    <span className="text-2xl font-semibold text-white">{users.length}</span>
-                                </div>
-                            </div>
-
-                            {/* Charts Row */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                {/* Process Types Distribution */}
-                                <div className="card-law">
-                                    <h3 className="text-base font-medium text-white mb-4">Processos por Tipo</h3>
-                                    <div className="space-y-3">
-                                        {[
-                                            { label: 'Direito Civil', value: 35, color: '#c9a857' },
-                                            { label: 'Direito Trabalhista', value: 28, color: '#1e3a5f' },
-                                            { label: 'Direito Criminal', value: 18, color: '#4a5568' },
-                                            { label: 'Outros', value: 19, color: '#27272a' },
-                                        ].map((item, i) => (
-                                            <div key={i}>
-                                                <div className="flex justify-between text-sm mb-1">
-                                                    <span className="text-zinc-400">{item.label}</span>
-                                                    <span className="text-white font-medium">{item.value}%</span>
+                                        <div className="card-law">
+                                            <h3 className="text-sm font-medium text-white mb-3">Status do Sistema</h3>
+                                            {dashStats.loading ? (
+                                                <div className="space-y-2">
+                                                    {[1, 2, 3].map(i => <div key={i} className="skeleton h-5 w-full rounded"></div>)}
                                                 </div>
-                                                <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full rounded-full transition-all duration-500"
-                                                        style={{ width: `${item.value}%`, backgroundColor: item.color }}
-                                                    />
+                                            ) : (
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { label: 'API', status: dashStats.systemHealth.api },
+                                                        { label: 'Storage', status: dashStats.systemHealth.storage },
+                                                        { label: 'Banco', status: dashStats.systemHealth.database },
+                                                    ].map(item => (
+                                                        <div key={item.label} className="flex items-center justify-between text-sm">
+                                                            <span className="text-zinc-500">{item.label}</span>
+                                                            <span className={`flex items-center gap-1.5 ${item.status === 'online' ? 'text-emerald-400' : 'text-red-400'
+                                                                }`}>
+                                                                <span className={`w-2 h-2 rounded-full ${item.status === 'online'
+                                                                    ? 'bg-emerald-400 animate-pulse'
+                                                                    : 'bg-red-400'
+                                                                    }`} />
+                                                                {item.status === 'online' ? 'Online' : 'Offline'}
+                                                            </span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Monthly Activity */}
-                                <div className="card-law">
-                                    <h3 className="text-base font-medium text-white mb-4">Atividade Mensal</h3>
-                                    <div className="flex items-end justify-between h-32 gap-2">
-                                        {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'].map((month, i) => {
-                                            const heights = [40, 65, 45, 80, 60, 90];
-                                            return (
-                                                <div key={month} className="flex-1 flex flex-col items-center gap-2">
-                                                    <div
-                                                        className="w-full bg-gradient-to-t from-[#1e3a5f] to-[#c9a857]/80 rounded-t-lg transition-all hover:opacity-80"
-                                                        style={{ height: `${heights[i]}%` }}
-                                                    />
-                                                    <span className="text-zinc-600 text-[10px] uppercase">{month}</span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Recent Activity & Storage */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                {/* Recent Activity */}
-                                <div className="card-law lg:col-span-2">
-                                    <h3 className="text-base font-medium text-white mb-4">Atividade Recente</h3>
-                                    <div className="space-y-3">
-                                        {videos.slice(0, 5).map((video, i) => (
-                                            <div key={video.id} className="flex items-center gap-3 p-3 bg-zinc-800/30 rounded-lg">
-                                                <div className="w-8 h-8 rounded-lg bg-[#1e3a5f] flex items-center justify-center shrink-0">
-                                                    <FileText size={14} className="text-[#c9a857]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm text-white truncate">{video.titulo_peca || 'Processo'}</p>
-                                                    <p className="text-xs text-zinc-500">Nº {video.processo}</p>
-                                                </div>
-                                                <div className="text-xs text-zinc-500">
-                                                    {new Date(video.created_at).toLocaleDateString()}
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {videos.length === 0 && (
-                                            <div className="text-center py-8 text-zinc-500 text-sm">
-                                                Nenhuma atividade recente
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Storage & System */}
-                                <div className="space-y-4">
-                                    <div className="card-law">
-                                        <h3 className="text-sm font-medium text-white mb-3">Armazenamento</h3>
-                                        <div className="relative w-24 h-24 mx-auto mb-3">
-                                            <svg className="w-full h-full -rotate-90">
-                                                <circle cx="48" cy="48" r="40" stroke="#27272a" strokeWidth="8" fill="none" />
-                                                <circle
-                                                    cx="48" cy="48" r="40"
-                                                    stroke="#c9a857"
-                                                    strokeWidth="8"
-                                                    fill="none"
-                                                    strokeDasharray={`${0.45 * 251.2} 251.2`}
-                                                    strokeLinecap="round"
-                                                />
-                                            </svg>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-xl font-semibold text-white">45%</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-center text-zinc-500 text-xs">450 MB de 1 GB usado</p>
-                                    </div>
-
-                                    <div className="card-law">
-                                        <h3 className="text-sm font-medium text-white mb-3">Status do Sistema</h3>
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-zinc-500">API</span>
-                                                <span className="flex items-center gap-1.5 text-emerald-400">
-                                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                                    Online
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-zinc-500">Storage</span>
-                                                <span className="flex items-center gap-1.5 text-emerald-400">
-                                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                                    Online
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-zinc-500">Banco</span>
-                                                <span className="flex items-center gap-1.5 text-emerald-400">
-                                                    <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                                                    Online
-                                                </span>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Settings View */}
-                    {activeTab === 'settings' && (
-                        <ConfiguracoesPage supabase={supabase} />
-                    )}
-                </div>
-            </div>
-        </main>
-
-        {/* Modals remain mostly unchanged but with updated colors if needed. For brevity I kept them compatible. */}
-        {/* Confirm Modal */}
-        {
-            showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-[#18181b] border border-gray-700 p-8 rounded-2xl max-w-sm w-full shadow-2xl animate-scale-in">
-                        <h3 className="text-lg font-bold text-white mb-2 text-center">Confirmar Criação?</h3>
-                        <p className="text-center text-gray-400 text-sm mb-6">Um novo membro será adicionado à equipe.</p>
-                        <div className="flex gap-3">
-                            <button onClick={() => setShowConfirmModal(false)} className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-bold transition-colors">Cancelar</button>
-                            <button onClick={confirmCreateUser} className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-blue-900/20">Confirmar</button>
-                        </div>
+                        {/* Settings View */}
+                        {activeTab === 'settings' && (
+                            <ConfiguracoesPage supabase={supabase} onResetTour={resetTour} />
+                        )}
                     </div>
                 </div>
-            )
-        }
-    </div >
-);
+            </main >
+
+            {/* Modals Temporarily Removed */}
+        </div >
+    );
 }
 
 // Sub-component for Client Logic
-function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyLink, copiedId, onNewUpload, supabase }) {
+function ClientProcessView({
+    videos, loading, searchQuery, setSearchQuery, copyLink, copiedId, onNewUpload, supabase, session,
+    setNewUserEmail, setNewIsAdmin, setShowConfirmModal,
+    teamMembers, filterMyCases, setFilterMyCases,
+    showDeleteClientModal, setShowDeleteClientModal, deleteClientConfirmation, setDeleteClientConfirmation, handleDeleteClient, isDeleting,
+    showDeleteProcessModal, setShowDeleteProcessModal, processToDelete, setProcessToDelete, handleDeleteProcess,
+    fetchVideos
+}) {
     const [selectedClient, setSelectedClient] = useState(null);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [viewLogs, setViewLogs] = useState([]);
     const [loadingLogs, setLoadingLogs] = useState(false);
+    const [historyLogs, setHistoryLogs] = useState([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     // Client info state - must be at top level
     const [clientInfo, setClientInfo] = useState({ email: '', phone: '', address: '', notes: '' });
@@ -849,6 +944,27 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
             setViewLogs([]);
         } finally {
             setLoadingLogs(false);
+        }
+    };
+
+    // Fetch process history
+    const fetchHistory = async (videoId) => {
+        if (!supabase || !videoId) return;
+        setLoadingHistory(true);
+        try {
+            const { data, error } = await supabase
+                .from('process_history')
+                .select('*, profiles:user_id(full_name, email)')
+                .eq('video_id', videoId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setHistoryLogs(data || []);
+        } catch (err) {
+            console.error('Error fetching history:', err);
+            // Don't clear logs on error to preserve potentially stale data or empty state
+        } finally {
+            setLoadingHistory(false);
         }
     };
 
@@ -881,15 +997,57 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
         return { total, mobile, desktop, topRegions };
     };
 
+    // Function to update responsible for a video
+    const updateResponsible = async (videoId, responsibleId) => {
+        const { error } = await supabase
+            .from('videos_pecas')
+            .update({ responsible_id: responsibleId || null })
+            .eq('id', videoId);
+        if (error) {
+            console.error('Error updating responsible:', error);
+        } else if (fetchVideos) {
+            fetchVideos();
+        }
+    };
+
+
+
+    // Function to update status for a video
+    const updateStatus = async (videoId, newStatus, videoData) => {
+        const { error } = await supabase
+            .from('videos_pecas')
+            .update({ status: newStatus })
+            .eq('id', videoId);
+
+        if (error) {
+            console.error('Error updating status:', error);
+            alert('Erro ao atualizar status');
+        } else {
+            if (fetchVideos) fetchVideos();
+        }
+    };
+
+    // Get responsible name helper
+    const getResponsibleName = (responsibleId) => {
+        if (!responsibleId) return null;
+        const member = teamMembers.find(m => m.id === responsibleId);
+        return member ? (member.full_name || member.email?.split('@')[0] || 'Sem nome') : null;
+    };
+
     const clients = React.useMemo(() => {
+        let filteredVideos = videos;
+        // If filterMyCases is on, show only processes assigned to the current user
+        if (filterMyCases && session?.user?.id) {
+            filteredVideos = videos.filter(v => v.responsible_id === session.user.id);
+        }
         const groups = {};
-        videos.forEach(v => {
+        filteredVideos.forEach(v => {
             const clientName = v.titulo_peca || "Sem Cliente";
             if (!groups[clientName]) groups[clientName] = [];
             groups[clientName].push(v);
         });
         return groups;
-    }, [videos]);
+    }, [videos, filterMyCases, session]);
 
     const filteredClients = React.useMemo(() => {
         if (!searchQuery) return Object.keys(clients);
@@ -901,9 +1059,27 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
 
     if (loading) {
         return (
-            <div className="py-20 flex flex-col items-center justify-center animate-fade-in">
-                <div className="spinner-premium mb-4"></div>
-                <p className="text-zinc-500 text-sm">Carregando dados...</p>
+            <div className="space-y-4 animate-fade-in">
+                {/* Skeleton search bar */}
+                <div className="skeleton h-12 w-full rounded-xl"></div>
+
+                {/* Skeleton process cards */}
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className={`skeleton-card animate-fade-in-up stagger-${i}`}>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="skeleton skeleton-avatar"></div>
+                            <div className="flex-1">
+                                <div className="skeleton skeleton-title"></div>
+                                <div className="skeleton skeleton-text w-3/4"></div>
+                            </div>
+                            <div className="skeleton h-6 w-20 rounded-full"></div>
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="skeleton h-8 w-24 rounded-lg"></div>
+                            <div className="skeleton h-8 w-24 rounded-lg"></div>
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     }
@@ -928,7 +1104,7 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
         const stats = getAnalyticsSummary();
         return (
             <div className="animate-fade-in space-y-5">
-                <button onClick={() => { setSelectedVideo(null); setViewLogs([]); }} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm">
+                <button onClick={() => { setSelectedVideo(null); setViewLogs([]); setHistoryLogs([]); }} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors text-sm">
                     <ChevronLeft size={16} /> Voltar para Processos
                 </button>
 
@@ -1017,6 +1193,79 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
                         </div>
                     )}
                 </div>
+
+                {/* Process History */}
+                <div className="card-law">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-medium text-white flex items-center gap-2">
+                            <History size={14} className="text-[#c9a857]" />
+                            Histórico de Alterações
+                        </h3>
+                        <button
+                            onClick={() => fetchHistory(selectedVideo.id)}
+                            className="text-xs text-zinc-500 hover:text-white flex items-center gap-1"
+                            title="Atualizar histórico"
+                        >
+                            <RefreshCw size={12} className={loadingHistory ? "animate-spin" : ""} />
+                            Atualizar
+                        </button>
+                    </div>
+
+                    {loadingHistory ? (
+                        <div className="py-4 text-center text-zinc-500 text-sm">Carregando histórico...</div>
+                    ) : historyLogs.length === 0 ? (
+                        <div className="py-4 text-center text-zinc-500 text-sm">Nenhuma alteração registrada</div>
+                    ) : (
+                        <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                            {historyLogs.map((log, i) => (
+                                <div key={log.id} className="relative pl-4 border-l border-zinc-700/50 pb-4 last:pb-0 last:border-0">
+                                    <div className="absolute -left-[5px] top-0 w-2.5 h-2.5 rounded-full bg-[#1e3a5f] border border-[#c9a857]"></div>
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex justify-between items-start">
+                                            <span className="text-sm font-medium text-zinc-200">
+                                                {log.action === 'created' ? 'Processo Criado' :
+                                                    log.action === 'status_changed' ? 'Status Alterado' :
+                                                        log.action === 'responsible_changed' ? 'Responsável Alterado' :
+                                                            'Informação Atualizada'}
+                                            </span>
+                                            <span className="text-[10px] text-zinc-500">{new Date(log.created_at).toLocaleString()}</span>
+                                        </div>
+                                        <p className="text-xs text-zinc-400">
+                                            por <span className="text-[#c9a857]">{log.profiles?.full_name || log.profiles?.email || 'Sistema'}</span>
+                                        </p>
+
+                                        {/* Details Diff */}
+                                        {log.details && (
+                                            <div className="mt-1 text-xs bg-zinc-800/50 p-2 rounded border border-zinc-700/30">
+                                                {log.action === 'status_changed' && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="line-through text-zinc-500">{log.details.old !== undefined ? log.details.old : 'N/A'}</span>
+                                                        <ChevronRight size={10} className="text-zinc-600" />
+                                                        <span className="text-emerald-400">{log.details.new}</span>
+                                                    </div>
+                                                )}
+                                                {log.action === 'responsible_changed' && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-zinc-500">
+                                                            {getResponsibleName(log.details.old) || 'Sem responsável'}
+                                                        </span>
+                                                        <ChevronRight size={10} className="text-zinc-600" />
+                                                        <span className="text-[#c9a857]">
+                                                            {getResponsibleName(log.details.new) || 'Removido'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {log.action === 'created' && (
+                                                    <span className="text-zinc-500">Processo cadastrado no sistema</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -1079,6 +1328,21 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
                                     <h2 className="text-lg font-semibold text-white">{selectedClient}</h2>
                                     <span className="text-xs text-[#c9a857]">{clientVideos.length} Processos</span>
                                 </div>
+
+                                {/* Create Access Button */}
+                                {!editingClient && clientInfo.email && (
+                                    <button
+                                        onClick={() => {
+                                            setNewUserEmail(clientInfo.email);
+                                            setNewIsAdmin(false);
+                                            setShowConfirmModal(true);
+                                        }}
+                                        className="ml-auto btn-secondary text-xs py-2 px-3 flex items-center gap-2 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                        title="Criar acesso para este cliente"
+                                    >
+                                        <Shield size={14} /> Criar Acesso
+                                    </button>
+                                )}
                             </div>
 
                             {editingClient ? (
@@ -1175,8 +1439,49 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-xs text-zinc-600 flex items-center gap-1 mb-3">
+                                        <div className="text-xs text-zinc-600 flex items-center gap-1 mb-2">
                                             <Calendar size={12} /> Criado em {new Date(video.created_at).toLocaleDateString()}
+                                        </div>
+
+                                        {/* Responsible Lawyer Dropdown */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Users size={12} className="text-zinc-500 flex-shrink-0" />
+                                            <select
+                                                value={video.responsible_id || ''}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    updateResponsible(video.id, e.target.value);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 text-xs rounded-lg px-2 py-1.5 focus:border-[#c9a857]/50 focus:outline-none transition-colors cursor-pointer flex-1"
+                                            >
+                                                <option value="">Sem responsável</option>
+                                                {teamMembers.map(member => (
+                                                    <option key={member.id} value={member.id}>
+                                                        {member.full_name || member.email?.split('@')[0] || 'Sem nome'}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Status Dropdown */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <Activity size={12} className="text-zinc-500 flex-shrink-0" />
+                                            <select
+                                                value={video.status || 'em_andamento'}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    updateStatus(video.id, e.target.value, video);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className={`bg-zinc-800/60 border border-zinc-700/50 text-xs rounded-lg px-2 py-1.5 focus:border-[#c9a857]/50 focus:outline-none transition-colors cursor-pointer flex-1 
+                                                    ${video.status === 'concluido' ? 'text-emerald-400' :
+                                                        video.status === 'arquivado' ? 'text-zinc-500' : 'text-[#c9a857]'}`}
+                                            >
+                                                <option value="em_andamento">Em Andamento</option>
+                                                <option value="concluido">Concluído</option>
+                                                <option value="arquivado">Arquivado</option>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -1298,6 +1603,17 @@ function ClientProcessView({ videos, loading, searchQuery, setSearchQuery, copyL
                     />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
                 </div>
+                {/* Meus Casos Toggle */}
+                <button
+                    onClick={() => setFilterMyCases(!filterMyCases)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-xs font-medium transition-all whitespace-nowrap ${filterMyCases
+                        ? 'bg-[#c9a857]/10 border-[#c9a857]/40 text-[#c9a857]'
+                        : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:border-zinc-600'
+                        }`}
+                >
+                    <Filter size={14} />
+                    Meus Casos
+                </button>
                 <div className="hidden md:block text-xs text-zinc-500 bg-zinc-800/50 px-3 py-1.5 rounded-lg">
                     {filteredClients.length} Clientes
                 </div>

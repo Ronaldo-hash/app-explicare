@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { Scale, Lock, Download, PlayCircle, FileText } from 'lucide-react';
 import { Logo } from './Logo';
-import { WhitelabelConfig } from '../lib/whitelabel';
+import { useWhitelabel } from '../context/WhitelabelContext';
 import noiseBg from '../assets/noise.svg';
 
 export function LandingPage({ data, supabase }) {
+    const { company_name } = useWhitelabel();
     // Inicializa com o valor que veio do banco (ou 0 se for nulo)
     const [_viewCount, setViewCount] = React.useState(data.views || 0);
 
@@ -284,7 +285,7 @@ export function LandingPage({ data, supabase }) {
                     <Logo size="small" />
                 </div>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest md:tracking-[0.3em] font-light">
-                    {WhitelabelConfig.companyName} &bull; Acesso Seguro &bull; © 2026
+                    {company_name} &bull; Acesso Seguro &bull; © 2026
                 </p>
             </footer>
         </div>

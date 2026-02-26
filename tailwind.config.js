@@ -10,11 +10,14 @@ export default {
                 sidebar: '#0c0c0e',
                 mainDark: '#1a1b20',
                 cardDark: '#27272a',
-                activeBlue: '#1e3a5f', // Changed to Navy
+                activeBlue: '#1e3a5f',
                 actionBlue: '#1e3a5f',
                 borderGray: '#52525b',
                 gold: '#c9a857',
                 navy: '#1e3a5f',
+                bgDark: '#0a0a0b',
+                goldLight: '#e8d5a1',
+                goldDark: '#b3954d',
             },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { House, FilePlus, Briefcase, ChartBar, Gear, SignOut, Scales, List, X, UsersThree } from '@phosphor-icons/react';
+import { useWhitelabel } from '../context/WhitelabelContext';
 
 export function Sidebar({ activeTab, setActiveTab, onLogout, userRole }) {
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const { company_name, logo_url } = useWhitelabel();
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -24,10 +26,15 @@ export function Sidebar({ activeTab, setActiveTab, onLogout, userRole }) {
 
     const toggleSidebar = () => setIsOpen(!isOpen);
 
+    // Split company name for styling: first word bold white, rest gold
+    const nameParts = (company_name || 'Explicare').split(' ');
+    const firstName = nameParts[0];
+    const restName = nameParts.slice(1).join(' ');
+
     return (
         <>
-            {/* Mobile Toggle */}
-            <div className="lg:hidden fixed top-4 left-4 z-50">
+            {/* Mobile Toggle - Hidden when bottom nav is present */}
+            <div className="hidden">
                 <button
                     onClick={toggleSidebar}
                     className="p-3 bg-[#111113] text-white rounded-lg border border-white/10 active:scale-95 transition-transform"
@@ -56,13 +63,25 @@ export function Sidebar({ activeTab, setActiveTab, onLogout, userRole }) {
             >
                 <div className="p-5">
                     {/* Logo */}
-                    <div className="flex items-center gap-3 mb-8 mt-10 lg:mt-0 pb-5 border-b border-white/5">
-                        <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[#1e3a5f]">
-                            <Scales size={22} weight="fill" className="text-[#c9a857]" />
-                        </div>
+                    <div id="onboarding-sidebar-logo" className="flex items-center gap-3 mb-8 mt-10 lg:mt-0 pb-5 border-b border-white/5">
+                        {logo_url ? (
+                            <img
+                                src={logo_url}
+                                alt={company_name}
+                                className="h-10 w-10 object-contain rounded-lg"
+                                onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling && (e.target.nextElementSibling.style.display = 'flex'); }}
+                            />
+                        ) : null}
+                        {!logo_url && (
+                            <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-transparent overflow-hidden">
+                                <img src="/logo.png" alt="Explicare Logo" className="w-full h-full object-cover scale-150" />
+                            </div>
+                        )}
                         <div>
-                            <span className="font-semibold text-white text-base block leading-tight">Explicare</span>
-                            <span className="text-[10px] tracking-[0.15em] text-[#c9a857] uppercase font-medium">Advocacia</span>
+                            <span className="font-semibold text-white text-base block leading-tight">{firstName}</span>
+                            {restName && (
+                                <span className="text-[10px] tracking-[0.15em] text-[#c9a857] uppercase font-medium">{restName}</span>
+                            )}
                         </div>
                     </div>
 
@@ -71,9 +90,18 @@ export function Sidebar({ activeTab, setActiveTab, onLogout, userRole }) {
                         {navItems.map((item) => {
                             const isActive = activeTab === item.id;
                             const Icon = item.icon;
+                            const onboardingIdMap = {
+                                dashboard: 'onboarding-nav-dashboard',
+                                upload: 'onboarding-nav-upload',
+                                processos: 'onboarding-nav-processos',
+                                reports: 'onboarding-nav-reports',
+                                equipe: 'onboarding-nav-equipe',
+                                settings: 'onboarding-nav-settings',
+                            };
                             return (
                                 <button
                                     key={item.id}
+                                    id={onboardingIdMap[item.id]}
                                     onClick={() => {
                                         setActiveTab(item.id);
                                         if (isMobile) setIsOpen(false);

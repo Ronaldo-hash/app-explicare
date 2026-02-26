@@ -5,6 +5,7 @@ import { GlobalStyles } from './components/GlobalStyles';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './lib/config';
 import { ThemeProvider } from './context/ThemeContext';
+import { WhitelabelProvider } from './context/WhitelabelContext';
 
 // ============================================
 // LAZY LOADING
@@ -13,15 +14,17 @@ import { ThemeProvider } from './context/ThemeContext';
 const AdminDashboard = lazy(() => import('./components/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const UploadPage = lazy(() => import('./components/UploadPage').then(m => ({ default: m.UploadPage })));
 const LandingPage = lazy(() => import('./components/LandingPage').then(m => ({ default: m.LandingPage })));
+const SalesLandingPage = lazy(() => import('./components/SalesLandingPage').then(m => ({ default: m.SalesLandingPage })));
 const LoginPage = lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./components/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const UpdatePasswordPage = lazy(() => import('./components/UpdatePasswordPage').then(m => ({ default: m.UpdatePasswordPage })));
 const SuccessPage = lazy(() => import('./components/SuccessPage').then(m => ({ default: m.SuccessPage })));
+const ClientPortal = lazy(() => import('./components/ClientPortal').then(m => ({ default: m.ClientPortal })));
 
 const PageLoader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center">
-    <div className="w-12 h-12 border-3 border-blue-500 border-t-white rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-    <p className="text-blue-400 text-sm font-medium tracking-widest uppercase">Carregando...</p>
+    <div className="w-12 h-12 border-3 border-[#c9a857] border-t-white rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(201,168,87,0.4)]"></div>
+    <p className="text-[#c9a857] text-sm font-medium tracking-widest uppercase">Carregando...</p>
   </div>
 );
 
@@ -34,9 +37,19 @@ function resolveRoute(session) {
   if (videoSlug) return 'fetching_landing';
   if (path === '/cadastro') return 'register';
   if (path === '/update-password') return 'update-password';
-  if (path === '/login') return session ? 'admin' : 'login';
-  if (!session) return 'login';
-  if (path === '/admin' || path === '/' || path === '') return 'admin';
+  if (path === '/login') return session ? 'portal' : 'login';
+
+  if (session) {
+    if (path === '/admin') return 'admin';
+    if (path === '/portal') return 'portal';
+    if (path === '/' || path === '') return 'admin'; // Or portal, depending on role, handled later 
+  } else {
+    if (path === '/' || path === '') return 'sales';
+  }
+
+  // Not logged in and trying to access protected routes -> go to login or sales
+  if (!session && (path === '/admin' || path === '/portal')) return 'login';
+
   return '404';
 }
 
@@ -139,80 +152,97 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <GlobalStyles />
-      <div className="mesh-bg"></div>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
-        <div className="orb orb-1"></div>
-        <div className="orb orb-2"></div>
-      </div>
+      <WhitelabelProvider supabase={supabase}>
+        <GlobalStyles />
+        <div className="mesh-bg"></div>
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+          <div className="orb orb-1"></div>
+          <div className="orb orb-2"></div>
+        </div>
 
-      <div className="relative z-10 w-full min-h-screen flex flex-col">
-        <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
+        <div className="relative z-10 w-full min-h-screen flex flex-col">
+          <ErrorBoundary>
+            <Suspense fallback={<PageLoader />}>
 
-            {currentRoute === 'login' && supabase && (
-              <LoginPage supabase={supabase} />
-            )}
+              {currentRoute === 'login' && supabase && (
+                <LoginPage supabase={supabase} />
+              )}
 
-            {currentRoute === 'admin' && supabase && (
-              <AdminDashboard
-                supabase={supabase}
-                session={session}
-                onLogout={async () => {
-                  await supabase.auth.signOut();
-                  window.location.href = '/login';
-                }}
-              />
-            )}
+              {currentRoute === 'admin' && supabase && (
+                <AdminDashboard
+                  supabase={supabase}
+                  session={session}
+                  onLogout={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = '/login';
+                  }}
+                />
+              )}
 
-            {currentRoute === '404' && (
-              <div className="min-h-screen flex items-center justify-center text-center p-6">
-                <div>
-                  <h1 className="text-blue-500 text-4xl font-serif font-bold mb-4">404</h1>
-                  <p className="text-gray-300">Página não encontrada.</p>
-                  <a href="/login" className="mt-6 inline-block text-blue-400 underline hover:text-white">Voltar ao Início</a>
+              {currentRoute === 'portal' && supabase && (
+                <ClientPortal
+                  supabase={supabase}
+                  session={session}
+                  onLogout={async () => {
+                    await supabase.auth.signOut();
+                    window.location.href = '/login';
+                  }}
+                />
+              )}
+
+              {currentRoute === '404' && (
+                <div className="min-h-screen flex items-center justify-center text-center p-6">
+                  <div>
+                    <h1 className="text-[#c9a857] text-6xl font-serif font-bold mb-4 drop-shadow-[0_0_20px_rgba(201,168,87,0.3)]">404</h1>
+                    <p className="text-zinc-400 text-lg">Página não encontrada.</p>
+                    <a href="/login" className="mt-6 inline-block text-[#c9a857] hover:text-white transition-colors font-medium underline underline-offset-4 decoration-[#c9a857]/30 hover:decoration-white/50">Voltar ao Início</a>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {currentRoute === 'landing' && landingData && supabase && (
-              <LandingPage data={landingData} supabase={supabase} />
-            )}
+              {currentRoute === 'landing' && landingData && supabase && (
+                <LandingPage data={landingData} supabase={supabase} />
+              )}
 
-            {currentRoute === 'register' && supabase && (
-              <RegisterPage supabase={supabase} />
-            )}
+              {currentRoute === 'sales' && (
+                <SalesLandingPage />
+              )}
 
-            {currentRoute === 'update-password' && supabase && (
-              <UpdatePasswordPage supabase={supabase} />
-            )}
+              {currentRoute === 'register' && supabase && (
+                <RegisterPage supabase={supabase} />
+              )}
 
-            {/* Default/Upload Route */}
-            {currentRoute === 'upload' && supabase && (
-              <>
-                <div style={{ display: uploadSuccessData ? 'none' : 'block' }}>
-                  <UploadPage
-                    key={uploadKey}
-                    supabase={supabase}
-                    session={session}
-                    onSuccess={(data) => setUploadSuccessData(data)}
-                  />
-                </div>
-                {uploadSuccessData && (
-                  <SuccessPage
-                    data={uploadSuccessData}
-                    onEdit={() => setUploadSuccessData(null)}
-                    onReset={() => {
-                      setUploadSuccessData(null);
-                      setUploadKey(prev => prev + 1);
-                    }}
-                  />
-                )}
-              </>
-            )}
-          </Suspense>
-        </ErrorBoundary>
-      </div>
+              {currentRoute === 'update-password' && supabase && (
+                <UpdatePasswordPage supabase={supabase} />
+              )}
+
+              {/* Default/Upload Route */}
+              {currentRoute === 'upload' && supabase && (
+                <>
+                  <div style={{ display: uploadSuccessData ? 'none' : 'block' }}>
+                    <UploadPage
+                      key={uploadKey}
+                      supabase={supabase}
+                      session={session}
+                      onSuccess={(data) => setUploadSuccessData(data)}
+                    />
+                  </div>
+                  {uploadSuccessData && (
+                    <SuccessPage
+                      data={uploadSuccessData}
+                      onEdit={() => setUploadSuccessData(null)}
+                      onReset={() => {
+                        setUploadSuccessData(null);
+                        setUploadKey(prev => prev + 1);
+                      }}
+                    />
+                  )}
+                </>
+              )}
+            </Suspense>
+          </ErrorBoundary>
+        </div>
+      </WhitelabelProvider>
     </ThemeProvider>
   );
 }

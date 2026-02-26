@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4af37"/>
+      <stop offset="50%" style="stop-color:#c9a857"/>
+      <stop offset="100%" style="stop-color:#b8942e"/>
+    </linearGradient>
+    <linearGradient id="navy" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a5a8f"/>
+      <stop offset="100%" style="stop-color:#1e3a5f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield icon -->
+  <g transform="translate(10, 10)">
+    <!-- Shield shape -->
+    <path d="M50 5 L90 20 L90 55 C90 75 70 92 50 100 C30 92 10 75 10 55 L10 20 Z" 
+          fill="url(#navy)" stroke="url(#gold)" stroke-width="2.5"/>
+    
+    <!-- Balance scale inside shield -->
+    <g transform="translate(50, 48)" stroke="url(#gold)" stroke-width="2" fill="none" stroke-linecap="round">
+      <!-- Center pillar -->
+      <line x1="0" y1="-22" x2="0" y2="18"/>
+      <!-- Base -->
+      <line x1="-12" y1="18" x2="12" y2="18"/>
+      <!-- Top beam -->
+      <line x1="-22" y1="-18" x2="22" y2="-18"/>
+      <!-- Top circle -->
+      <circle cx="0" cy="-22" r="3" fill="url(#gold)"/>
+      <!-- Left chain -->
+      <line x1="-22" y1="-18" x2="-22" y2="-6"/>
+      <!-- Right chain -->
+      <line x1="22" y1="-18" x2="22" y2="-6"/>
+      <!-- Left plate -->
+      <path d="M-30 -6 Q-22 2 -14 -6" stroke-width="2.5"/>
+      <!-- Right plate -->
+      <path d="M14 -6 Q22 2 30 -6" stroke-width="2.5"/>
+    </g>
+  </g>
+
+  <!-- EXPLICARE text -->
+  <text x="120" y="55" font-family="Georgia, 'Times New Roman', serif" font-size="42" font-weight="bold" 
+        letter-spacing="6" fill="url(#gold)">EXPLICARE</text>
+  
+  <!-- Subtitle -->
+  <text x="120" y="82" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" 
+        letter-spacing="8" fill="#8a9ab5" font-weight="300">TECNOLOGIA JURÍDICA</text>
+
+  <!-- Decorative line -->
+  <line x1="120" y1="92" x2="390" y2="92" stroke="url(#gold)" stroke-width="0.5" opacity="0.4"/>
+</svg>

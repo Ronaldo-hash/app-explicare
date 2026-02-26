@@ -7,11 +7,12 @@ import { PdfVisualEditor } from './PdfVisualEditor';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/config';
 import { HelpTooltip, HELP_TEXTS } from './HelpTooltip';
 
-export function UploadForm({ onSuccess, supabase }) {
+export function UploadForm({ onSuccess, supabase, teamMembers = [], session }) {
     const [loading, setLoading] = useState(false);
     const [statusMsg, setStatusMsg] = useState("");
     const [processo, setProcesso] = useState("");
     const [cliente, setCliente] = useState("");
+    const [clientEmail, setClientEmail] = useState(""); // Add client email state
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [tipoAcao, setTipoAcao] = useState("");
@@ -20,6 +21,7 @@ export function UploadForm({ onSuccess, supabase }) {
     const [videoFile, setVideoFile] = useState(null);
     const [dragActive, setDragActive] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
+    const [responsibleId, setResponsibleId] = useState(session?.user?.id || '');
 
     const [showVisualEditor, setShowVisualEditor] = useState(false);
     const [generatedQrData, setGeneratedQrData] = useState(null);
@@ -207,7 +209,9 @@ export function UploadForm({ onSuccess, supabase }) {
                 pdf_final_url: pdfPublicUrl,
                 access_password: password || null,
                 action_type: tipoAcao || null,
-                // status: statusProcesso, // Temporarily disabled due to Supabase schema cache issue
+                responsible_id: responsibleId || null,
+                status: statusProcesso,
+                client_email: clientEmail || null,
             };
 
             const { error: dbErr } = await supabase.from('videos_pecas').insert([record]);
@@ -285,6 +289,18 @@ export function UploadForm({ onSuccess, supabase }) {
                             />
                         </div>
 
+                        {/* Client Email */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Email do Cliente (Para Notificações)</label>
+                            <input
+                                type="email"
+                                value={clientEmail}
+                                onChange={(e) => setClientEmail(e.target.value)}
+                                className="input-premium"
+                                placeholder="email@exemplo.com"
+                            />
+                        </div>
+
                         {/* Action Type */}
                         <div className="flex flex-col gap-1.5">
                             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Tipo de Ação</label>
@@ -320,6 +336,28 @@ export function UploadForm({ onSuccess, supabase }) {
                                     <option value="em_andamento">🟡 Em Andamento</option>
                                     <option value="concluido">🟢 Concluído</option>
                                     <option value="arquivado">⚫ Arquivado</option>
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Advogado Responsável */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">Advogado Responsável</label>
+                            <div className="relative">
+                                <select
+                                    value={responsibleId}
+                                    onChange={(e) => setResponsibleId(e.target.value)}
+                                    className="input-premium appearance-none cursor-pointer"
+                                >
+                                    <option value="">Sem responsável</option>
+                                    {teamMembers.map(member => (
+                                        <option key={member.id} value={member.id}>
+                                            {member.full_name || member.email?.split('@')[0] || 'Sem nome'}
+                                        </option>
+                                    ))}
                                 </select>
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>

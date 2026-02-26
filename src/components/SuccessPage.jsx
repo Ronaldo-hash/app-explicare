@@ -13,7 +13,7 @@ export function SuccessPage({ data, onReset, onEdit }) {
     }, []);
 
     return (
-        <div className="fixed inset-0 z-50 bg-mainDark/90 backdrop-blur-md flex flex-col items-center justify-center p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#0a0a0b]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 overflow-y-auto">
 
             {/* Confetti Animation */}
             {showConfetti && (
@@ -41,7 +41,7 @@ export function SuccessPage({ data, onReset, onEdit }) {
                 </div>
             )}
 
-            <div className={`w-full max-w-5xl bg-cardDark border border-gray-700/50 shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-black/50 transition-all duration-500 ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+            <div className={`w-full max-w-5xl bg-[#111113] border border-[#c9a857]/15 shadow-2xl rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-black/50 transition-all duration-500 ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
                 {/* Left Column: Actions */}
                 <div className="flex-1 flex flex-col items-center text-center justify-center p-8 md:p-12 border-r border-gray-700/30">
@@ -63,7 +63,7 @@ export function SuccessPage({ data, onReset, onEdit }) {
                         <a
                             href={data.landingUrl}
                             target="_blank"
-                            className="bg-activeBlue hover:bg-blue-600 text-white w-full py-3.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20 group"
+                            className="bg-gradient-to-r from-[#c9a857] to-[#aa8a39] hover:from-[#d4b76a] hover:to-[#c9a857] text-[#0a0a0b] w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#c9a857]/20 group border border-[#c9a857]/30"
                         >
                             Visualizar Página Cliente
                             <ExternalLink size={16} className="group-hover:translate-x-0.5 transition-transform" />
@@ -99,7 +99,7 @@ export function SuccessPage({ data, onReset, onEdit }) {
                 <div className="flex-1 bg-[#151518] flex flex-col min-h-[500px] relative">
                     <div className="absolute inset-0 bg-[radial-gradient(#ffffff05_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-                    <div className="relative z-10 flex items-center justify-between p-4 border-b border-white/5 bg-cardDark/50 backdrop-blur-sm">
+                    <div className="relative z-10 flex items-center justify-between p-4 border-b border-white/5 bg-[#111113]/50 backdrop-blur-sm">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-red-500/50"></div>
                             <div className="w-2 h-2 rounded-full bg-yellow-500/50"></div>

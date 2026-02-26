@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Lock, Mail, ArrowRight, ShieldCheck, CheckCircle, AlertCircle } from 'lucide-react';
-
-const BG_IMAGE_URL = 'https://zrssvsfxxtjieoyurzms.supabase.co/storage/v1/object/sign/arquivos%20da%20empresa/fundo%20site.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mMGYzMmMyYS05ODRhLTQwMjctOTA1YS05NGU1NWQ3ZmY3NzEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcnF1aXZvcyBkYSBlbXByZXNhL2Z1bmRvIHNpdGUucG5nIiwiaWF0IjoxNzcwMTg4ODIyLCJleHAiOjE4MDE3MjQ4MjJ9._Ov3-JO41bj6oDDjyMV3PkOUDVLe1ETN8hskLn0vfQ8';
+import { Loader2, Lock, Mail, ArrowRight, ShieldCheck, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useWhitelabel } from '../context/WhitelabelContext';
 
 export function LoginPage({ supabase }) {
+    const { background_url } = useWhitelabel();
+    const BG_URL = background_url || 'https://zrssvsfxxtjieoyurzms.supabase.co/storage/v1/object/sign/arquivos%20da%20empresa/fundo%20site.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mMGYzMmMyYS05ODRhLTQwMjctOTA1YS05NGU1NWQ3ZmY3NzEiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJhcnF1aXZvcyBkYSBlbXByZXNhL2Z1bmRvIHNpdGUucG5nIiwiaWF0IjoxNzcwMTg4ODIyLCJleHAiOjE4MDE3MjQ4MjJ9._Ov3-JO41bj6oDDjyMV3PkOUDVLe1ETN8hskLn0vfQ8';
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,8 +21,8 @@ export function LoginPage({ supabase }) {
         // Preload background image
         const img = new Image();
         img.onload = () => setBgLoaded(true);
-        img.src = BG_IMAGE_URL;
-    }, []);
+        img.src = BG_URL;
+    }, [BG_URL]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -77,7 +78,7 @@ export function LoginPage({ supabase }) {
             className="min-h-screen flex items-center justify-center font-sans relative transition-all duration-700"
             style={{
                 backgroundColor: '#0a0a0b',
-                backgroundImage: bgLoaded ? `url(${BG_IMAGE_URL})` : 'none',
+                backgroundImage: bgLoaded ? `url(${BG_URL})` : 'none',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
@@ -86,7 +87,14 @@ export function LoginPage({ supabase }) {
             {/* Overlay for better readability */}
             <div className="absolute inset-0 bg-black/60" />
 
-            <div className="w-full max-w-md p-6 animate-fade-in relative z-10">
+            {/* Back to Home Button */}
+            <div className="absolute top-6 left-6 z-20">
+                <a href="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm font-medium">
+                    <ArrowLeft size={16} /> Voltar ao site
+                </a>
+            </div>
+
+            <div className="w-full max-w-md p-6 animate-fade-in relative z-10 pt-16">
 
                 {/* Logo */}
                 <div className="text-center mb-8">

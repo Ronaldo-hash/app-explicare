@@ -1,0 +1,212 @@
+/* ============================================
+   INTRO.JS — EXPLICARE DARK/GOLD THEME
+   ============================================ */
+
+/* Overlay */
+.introjs-overlay {
+    background-color: rgba(0, 0, 0, 0.75) !important;
+}
+
+/* Highlight border */
+.introjs-helperLayer {
+    background-color: transparent !important;
+    border: 2px solid rgba(201, 168, 87, 0.5) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 30px rgba(201, 168, 87, 0.15), 0 0 0 5000px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Tooltip */
+.introjs-tooltip {
+    background-color: #111113 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    color: #e4e4e7 !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6),
+        0 0 30px rgba(201, 168, 87, 0.08) !important;
+    padding: 20px !important;
+    max-width: 360px !important;
+    font-family: inherit !important;
+}
+
+/* Tooltip title */
+.introjs-tooltip-title {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Tooltip text */
+.introjs-tooltiptext {
+    color: #a1a1aa !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    padding: 0 !important;
+}
+
+/* Arrow */
+.introjs-arrow {
+    border-color: transparent !important;
+}
+
+.introjs-arrow.top {
+    border-bottom-color: #111113 !important;
+}
+
+.introjs-arrow.bottom {
+    border-top-color: #111113 !important;
+}
+
+.introjs-arrow.left {
+    border-right-color: #111113 !important;
+}
+
+.introjs-arrow.right {
+    border-left-color: #111113 !important;
+}
+
+/* Buttons container */
+.introjs-tooltipbuttons {
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding-top: 14px !important;
+    margin-top: 16px !important;
+    display: flex !important;
+    gap: 8px !important;
+}
+
+/* All buttons base */
+.introjs-button {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    color: #a1a1aa !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 8px 18px !important;
+    text-shadow: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+}
+
+.introjs-button:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.introjs-button:focus {
+    box-shadow: 0 0 0 3px rgba(201, 168, 87, 0.15) !important;
+    outline: none !important;
+}
+
+/* Next/Done button — Gold accent */
+.introjs-nextbutton,
+.introjs-donebutton {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%) !important;
+    border: 1px solid rgba(201, 168, 87, 0.3) !important;
+    color: #c9a857 !important;
+    font-weight: 600 !important;
+}
+
+.introjs-nextbutton:hover,
+.introjs-donebutton:hover {
+    background: linear-gradient(135deg, #254a75 0%, #162040 100%) !important;
+    border-color: rgba(201, 168, 87, 0.5) !important;
+    color: #e4dcc0 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4) !important;
+}
+
+/* Skip button */
+.introjs-skipbutton {
+    color: #71717a !important;
+    font-size: 12px !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    border: none !important;
+    padding: 4px 8px !important;
+    background: transparent !important;
+}
+
+.introjs-skipbutton:hover {
+    color: #c9a857 !important;
+    background: transparent !important;
+}
+
+/* Progress bar */
+.introjs-progress {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 999px !important;
+    height: 3px !important;
+    margin: 12px 0 4px !important;
+}
+
+.introjs-progressbar {
+    background: linear-gradient(90deg, #c9a857, #e4dcc0) !important;
+    border-radius: 999px !important;
+}
+
+/* Step numbers (bullets) */
+.introjs-bullets {
+    text-align: center !important;
+    padding-top: 10px !important;
+}
+
+.introjs-bullets ul li a {
+    background: rgba(255, 255, 255, 0.15) !important;
+    width: 7px !important;
+    height: 7px !important;
+    transition: all 0.3s !important;
+}
+
+.introjs-bullets ul li a.active {
+    background: #c9a857 !important;
+    width: 20px !important;
+    border-radius: 999px !important;
+}
+
+/* Disabled button */
+.introjs-disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .introjs-tooltip {
+        max-width: 280px !important;
+        padding: 16px !important;
+        margin: 8px !important;
+    }
+
+    .introjs-tooltip-title {
+        font-size: 14px !important;
+    }
+
+    .introjs-tooltiptext {
+        font-size: 13px !important;
+    }
+
+    .introjs-button {
+        font-size: 12px !important;
+        padding: 7px 14px !important;
+    }
+
+    /* Ensure tooltip doesn't go off-screen */
+    .introjs-tooltipReferenceLayer {
+        max-width: calc(100vw - 16px) !important;
+    }
+
+    /* Fix z-index to stay above sidebar overlay */
+    .introjs-helperLayer,
+    .introjs-tooltipReferenceLayer,
+    .introjs-tooltip {
+        z-index: 10000001 !important;
+    }
+
+    .introjs-overlay {
+        z-index: 10000000 !important;
+    }
+}

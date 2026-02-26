@@ -1,0 +1,175 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img "Explicare" [ref=e8]
+        - generic [ref=e9]: Explicare
+      - navigation [ref=e10]:
+        - link "A Solução" [ref=e11] [cursor=pointer]:
+          - /url: "#solucao"
+          - text: A Solução
+        - link "Benefícios" [ref=e12] [cursor=pointer]:
+          - /url: "#beneficios"
+          - text: Benefícios
+        - link "Como Funciona" [ref=e13] [cursor=pointer]:
+          - /url: "#como-funciona"
+          - text: Como Funciona
+      - generic [ref=e14]:
+        - link "Entrar" [ref=e15] [cursor=pointer]:
+          - /url: /login
+        - link "Falar com Consultor" [ref=e16] [cursor=pointer]:
+          - /url: https://wa.me/5531993988889
+  - generic [ref=e17]:
+    - generic [ref=e20]:
+      - generic [ref=e23]: A Revolução no Atendimento Jurídico
+      - heading "Seu escritório Explicado e Valorizado." [level=1] [ref=e24]:
+        - text: Seu escritório
+        - text: Explicado e Valorizado.
+      - paragraph [ref=e25]: Transforme petições complexas em vídeos claros com links seguros e QR Codes exclusivos para cada cliente. Reduza dúvidas e aumente a percepção do seu valor.
+      - generic [ref=e26]:
+        - link "Agendar Demonstração" [ref=e27] [cursor=pointer]:
+          - /url: https://wa.me/5531993988889
+          - text: Agendar Demonstração
+          - img [ref=e28]
+        - link "Como funciona?" [ref=e30] [cursor=pointer]:
+          - /url: "#como-funciona"
+          - text: Como funciona?
+          - img [ref=e31]
+    - generic [ref=e35]: Scroll
+  - generic [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e42]: A Solução
+      - heading "Porque seus clientes não leem petições." [level=2] [ref=e43]:
+        - text: Porque seus clientes
+        - text: não leem petições.
+      - paragraph [ref=e44]: O "juridiquês" gera ansiedade, ligações fora de hora e a falsa sensação de que "nada está sendo feito". O Explicare resolve a comunicação no momento exato da dúvida.
+    - generic [ref=e45]:
+      - generic [ref=e46]:
+        - img [ref=e49]
+        - heading "Vídeo Transparente" [level=3] [ref=e52]
+        - paragraph [ref=e53]: Grave um vídeo rápido explicando a peça protocolada. O cliente sente proximidade, entende a estratégia e valoriza o seu esforço.
+      - generic [ref=e54]:
+        - img [ref=e57]
+        - heading "Acesso na Palma da Mão" [level=3] [ref=e59]
+        - paragraph [ref=e60]: Entregue a petição física com um QR Code ou envie um Link Único. O cliente acessa tudo pelo celular, sem precisar criar contas complexas.
+      - generic [ref=e61]:
+        - img [ref=e64]
+        - heading "Segurança Total" [level=3] [ref=e67]
+        - paragraph [ref=e68]: Seus documentos são confidenciais. O acesso ao link e vídeos é protegido por senha forte, garantindo o sigilo advogado-cliente.
+  - generic [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e75]: O Diferencial Explicare
+      - heading "A Magia do Explicare" [level=2] [ref=e76]
+      - paragraph [ref=e77]: Da petição física, tediosa e complexa, para um vídeo claro e direto em segundos.
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic: PETIÇÃO INICIAL
+        - img "Explicare" [ref=e84]
+        - img "QR Code Explicare" [ref=e107]
+      - generic [ref=e108]:
+        - generic [ref=e113]:
+          - img [ref=e114]
+          - generic [ref=e116]: explicare.com · peticao-explicada.mp4
+        - generic [ref=e117]:
+          - img [ref=e122]
+          - generic [ref=e124]:
+            - generic [ref=e125]: 00:42
+            - generic [ref=e129]: 02:15
+        - generic [ref=e130]: Ao Vivo
+  - generic [ref=e133]:
+    - generic [ref=e134]:
+      - generic [ref=e136]: Como Funciona
+      - heading "Como Funciona o Explicare" [level=2] [ref=e137]
+      - paragraph [ref=e138]: Em 3 passos simples você revoluciona sua entrega.
+    - generic [ref=e139]:
+      - generic [ref=e140]:
+        - generic [ref=e142]: "1"
+        - heading "Upload & Gravação" [level=3] [ref=e143]
+        - paragraph [ref=e144]: Importe o PDF da petição para a plataforma e cadastre o link do vídeo explicativo (hospedado no Youtube ou Vimeo).
+      - generic [ref=e145]:
+        - generic [ref=e147]: "2"
+        - heading "Geração Automática" [level=3] [ref=e148]
+        - paragraph [ref=e149]: O sistema vincula os arquivos, cria uma senha de acesso e embute um QR Code mágico e um link clicável na última página do seu PDF.
+      - generic [ref=e150]:
+        - generic [ref=e152]: "3"
+        - heading "Portal do Cliente" [level=3] [ref=e153]
+        - paragraph [ref=e154]: Seu cliente usa o QR Code ou o link, digita a senha e é recebido no portal whitelabel, com sua logo e cores, para ver o vídeo e baixar os anexos.
+  - generic [ref=e156]:
+    - generic [ref=e157]:
+      - generic [ref=e159]: Benefícios
+      - heading "O Fim das Dúvidas Recorrentes" [level=2] [ref=e160]:
+        - text: O Fim das Dúvidas
+        - text: Recorrentes
+      - paragraph [ref=e161]: Advogados perdem em média 10 horas por semana apenas respondendo atualizações processuais e traduzindo termos técnicos. O Explicare atua como seu assistente 24h.
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - img [ref=e165]
+          - generic [ref=e168]: Aumente a percepção do honorário cobrado.
+        - generic [ref=e169]:
+          - img [ref=e171]
+          - generic [ref=e174]: Reduza mensagens de WhatsApp ansiosas.
+        - generic [ref=e175]:
+          - img [ref=e177]
+          - generic [ref=e180]: Evite falhas de comunicação e frustração.
+        - generic [ref=e181]:
+          - img [ref=e183]
+          - generic [ref=e186]: Destaque seu escritório na era tecnológica.
+        - generic [ref=e187]:
+          - img [ref=e189]
+          - generic [ref=e192]: "Gestão centralizada: saiba quantas vezes o vídeo foi visto."
+    - generic [ref=e194]:
+      - generic [ref=e199]:
+        - img [ref=e200]
+        - generic [ref=e203]: explicare.com/petica…
+      - generic [ref=e204]:
+        - generic [ref=e207]:
+          - img [ref=e210]
+          - generic [ref=e214]:
+            - generic [ref=e215]: 01:24
+            - generic [ref=e217]: 02:15
+        - generic [ref=e218] [cursor=pointer]:
+          - img [ref=e219]
+          - generic [ref=e222]: Baixar Petição Inicial.pdf
+  - generic [ref=e224]:
+    - generic [ref=e225]:
+      - generic [ref=e227]: Dúvidas Frequentes
+      - heading "Como podemos ajudar?" [level=2] [ref=e228]
+      - paragraph [ref=e229]: Respostas para as principais dúvidas sobre o Cérebro Explicare.
+    - generic [ref=e230]:
+      - generic [ref=e231]:
+        - heading "Como o Explicare funciona na prática?" [level=3] [ref=e233]
+        - paragraph [ref=e234]: "É muito simples: você faz o upload da documentação no nosso sistema. Configuramos uma página com a sua identidade visual contendo um vídeo explicativo animado de alta conversão. Em vez de enviar uma petição pesada, você envia esse link visual e limpo para o seu cliente final com o vídeo didático e o documento acoplado. Ele acessa e entende tudo de forma fácil, aliviando o suporte do escritório."
+      - generic [ref=e235]:
+        - heading "Isso realmente diminui a taxa de dúvidas no meu WhatsApp?" [level=3] [ref=e237]
+        - paragraph [ref=e238]: Sim! Um dos maiores gargalos dos escritórios é o volume de clientes perguntando as mesmas coisas sobre andamentos processuais ou o jargão jurídico de uma petição. Com o vídeo didático humanizado da Explicare, a compreensão do cliente aumenta drasticamente.
+      - generic [ref=e239]:
+        - heading "É seguro utilizar a plataforma para meus clientes?" [level=3] [ref=e241]
+        - paragraph [ref=e242]: Com certeza. Todo o tráfego é criptografado. Os links do portal do cliente são estruturados de forma segura para focar apenas na explicação e acompanhamento visual, sem expor dados desnecessários ou sensíveis da ação.
+      - generic [ref=e243]:
+        - heading "O visual da página de vídeo será adaptado para a minha marca?" [level=3] [ref=e245]
+        - paragraph [ref=e246]: Sim, a plataforma possui Whitelabel completo! Configuramos o logo do seu escritório e as principais cores de sua identidade visual nos documentos e no portal do cliente para manter a credibilidade alta.
+  - generic [ref=e249]:
+    - generic [ref=e251]: Comece Hoje
+    - heading "Pronto para inovar seu escritório?" [level=2] [ref=e252]:
+      - text: Pronto para inovar
+      - text: seu escritório?
+    - paragraph [ref=e253]: Inicie sua jornada hoje e entregue uma experiência premium que fideliza e encanta seus clientes.
+    - link "Assine Agora pelo WhatsApp" [ref=e254] [cursor=pointer]:
+      - /url: https://wa.me/5531993988889
+      - text: Assine Agora pelo WhatsApp
+      - img [ref=e255]
+  - contentinfo [ref=e257]:
+    - generic [ref=e258]:
+      - generic [ref=e259]:
+        - img [ref=e260]
+        - generic [ref=e263]: Explicare Digital
+      - paragraph [ref=e264]: © 2026 Explicare. Todos os direitos reservados.
+      - link "Área do Advogado →" [ref=e265] [cursor=pointer]:
+        - /url: /login
+  - link "Fale conosco no WhatsApp" [ref=e266] [cursor=pointer]:
+    - /url: https://wa.me/5531993988889
+    - img [ref=e267]
+```
